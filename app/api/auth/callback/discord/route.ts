@@ -53,9 +53,10 @@ export async function GET(req: NextRequest) {
     if (!profileRes.ok) throw new Error("Failed to fetch Discord profile");
     const profile: DiscordUser = await profileRes.json();
 
-        const avatarUrl = profile.avatar
-      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=128`
-      : `https://cdn.discordapp.com/embed/avatars/${(BigInt(profile.id) >> 22n) % 6n}.png`;
+      const avatarUrl = profile.avatar
+    ? `https://discordapp.com{profile.id}/${profile.avatar}.png?size=128`
+    : `https://discordapp.com{(BigInt(profile.id) >> 22n) % 6n}.png`;
+
 
     const username = profile.global_name || profile.username;
     const uid = `discord:${profile.id}`;
