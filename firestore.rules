@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // Custom claim "role" is set when the server mints the Firebase
+      // custom token during the Discord OAuth callback (see route.ts).
+      return isSignedIn() && request.auth.token.role == "admin";
+    }
+
+    // Member profiles — written only by the server (Admin SDK) during login.
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Gang balances — written only by the server, inside an atomic
+    // transaction, when an admin approves a request.
+    match /treasury/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Item catalog / quantities.
+    match /inventory/{itemId} {
+      allow read: if isSignedIn();
+      // Admins may add new item types to the catalog directly (quantity
+      // should start at 0); quantity changes on existing items only ever
+      // happen through the server-side approve API.
+      allow create: if isAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Deposit/withdraw requests.
+    match /transactions/{txId} {
+      allow read: if isSignedIn();
+      // Members may only create their own, always starting as "pending".
+      allow create: if isSignedIn()
+                    && request.resource.data.requestedBy == request.auth.uid
+                    && request.resource.data.status == "pending";
+      // Approving/rejecting is only done server-side with the Admin SDK,
+      // which bypasses these rules entirely.
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
