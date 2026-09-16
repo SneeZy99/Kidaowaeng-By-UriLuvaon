@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #14171b;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 12%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 34px
+    );
+  color: #e9e6dd;
+}
+
+::selection {
+  background-color: #c39a5d;
+  color: #14171b;
+}
+
+.ledger-figure {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.brass-rule {
+  background: linear-gradient(90deg, transparent, #c39a5d55, transparent);
+  height: 1px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .vault-reveal {
+    animation: vault-reveal 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes vault-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #c39a5d;
+  outline-offset: 2px;
+}
