@@ -13,6 +13,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.role == "admin";
     }
 
+    function isGuildMember() {
+      return isSignedIn() && request.auth.token.guildMember == true;
+    }
+
     function isValidTransaction() {
       return request.resource.data.amount is number
         && request.resource.data.amount > 0
@@ -26,20 +30,20 @@ service cloud.firestore {
 
     // Member profiles — written only by the server (Admin SDK) during login.
     match /users/{uid} {
-      allow read: if isSignedIn();
+      allow read: if isGuildMember();
       allow write: if false;
     }
 
     // Gang balances — written only by the server, inside an atomic
     // transaction, when an admin approves a request.
     match /treasury/{docId} {
-      allow read: if isSignedIn();
+      allow read: if isGuildMember();
       allow write: if false;
     }
 
     // Item catalog / quantities.
     match /inventory/{itemId} {
-      allow read: if isSignedIn();
+      allow read: if isGuildMember();
       // Admins may add new item types to the catalog directly (quantity
       // should start at 0); quantity changes on existing items only ever
       // happen through the server-side approve API.
@@ -50,9 +54,9 @@ service cloud.firestore {
 
     // Deposit/withdraw requests.
     match /transactions/{txId} {
-      allow read: if isSignedIn();
+      allow read: if isGuildMember();
       // Members may only create their own, always starting as "pending".
-      allow create: if isSignedIn()
+      allow create: if isGuildMember()
                     && request.resource.data.requestedBy == request.auth.uid
                     && request.resource.data.status == "pending"
                     && isValidTransaction();
