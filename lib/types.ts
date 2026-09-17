@@ -20,6 +20,8 @@ export interface AppUser {
   avatarUrl: string;
   role: "member" | "admin";
   createdAt: number;
+  icName?: string;
+  displayName?: string;
 }
 
 export interface Treasury {
