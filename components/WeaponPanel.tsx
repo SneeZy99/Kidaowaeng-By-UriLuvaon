@@ -82,12 +82,17 @@ export function WeaponPanel() {
   }, {});
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
-      <section className="rounded-xl border border-vault-border bg-vault-surface shadow-panel">
+    <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+      <section className="vault-reveal overflow-hidden rounded-xl border border-vault-border bg-vault-surface shadow-panel">
         <div className="border-b border-vault-border px-6 py-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-vault-brass">Vault Armory</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-vault-text">คลังอาวุธสมาชิก</h1>
-          <p className="mt-1 text-sm text-vault-muted">สมาชิกทุกคนเพิ่มอาวุธของตัวเองได้ และทุกคนจะเห็นว่าใครมีอาวุธอะไร</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-vault-red">Vault Armory // Live</p>
+              <h1 className="mt-1 font-display text-2xl font-semibold text-vault-text">คลังอาวุธสมาชิก</h1>
+              <p className="mt-1 text-sm text-vault-muted">สมาชิกทุกคนเพิ่มอาวุธของตัวเองได้ และทุกคนจะเห็นว่าใครมีอาวุธอะไร</p>
+            </div>
+            <span className="hidden rounded-full border border-vault-red/35 bg-vault-red/10 px-3 py-1 font-mono text-[10px] tracking-wider text-vault-red sm:block">{weapons.length.toString().padStart(2, "0")} UNITS</span>
+          </div>
           <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-vault-border bg-vault-bg/60 px-3 py-3">
             <button onClick={() => setOwnerFilter("all")} className={`rounded-full px-3 py-1.5 text-xs font-medium ${ownerFilter === "all" ? "bg-vault-brass text-vault-bg" : "border border-vault-border text-vault-muted"}`}>ทั้งหมด</button>
             <button onClick={() => setOwnerFilter("mine")} className={`rounded-full px-3 py-1.5 text-xs font-medium ${ownerFilter === "mine" ? "bg-vault-brass text-vault-bg" : "border border-vault-border text-vault-muted"}`}>ของฉัน</button>
@@ -112,16 +117,16 @@ export function WeaponPanel() {
         {error && <p className="px-6 pt-4 text-sm text-vault-red">{error}</p>}
       </section>
 
-      <section className="rounded-xl border border-vault-border bg-vault-surface shadow-panel">
-        <div className="border-b border-vault-border px-6 py-4"><h2 className="font-display text-lg font-semibold text-vault-text">อาวุธของสมาชิก</h2></div>
+      <section className="vault-reveal overflow-hidden rounded-xl border border-vault-border bg-vault-surface shadow-panel">
+        <div className="flex items-center justify-between border-b border-vault-border px-6 py-4"><h2 className="font-display text-lg font-semibold text-vault-text">อาวุธของสมาชิก</h2><span className="font-mono text-[10px] tracking-widest text-vault-muted">REGISTRY</span></div>
         {loading && <p className="px-6 py-8 text-sm text-vault-muted">กำลังโหลด...</p>}
         {!loading && weapons.length === 0 && <p className="px-6 py-8 text-center text-sm text-vault-muted">ยังไม่มีรายการอาวุธ</p>}
         <div className="divide-y divide-vault-border">
           {Object.entries(visibleGrouped).map(([ownerId, ownerWeapons]) => (
             <div key={ownerId} className="px-6 py-5">
-              <p className="mb-3 text-sm font-semibold text-vault-brass">{ownerWeapons[0].ownerName}</p>
+              <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-vault-brass"><span className="h-1.5 w-1.5 rounded-full bg-vault-red shadow-[0_0_8px_rgba(181,101,75,0.95)]" />{ownerWeapons[0].ownerName}</p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {ownerWeapons.map((weapon) => <article key={weapon.id} className="overflow-hidden rounded-lg border border-vault-border bg-vault-bg/70 transition hover:-translate-y-0.5 hover:border-vault-brass/70"><div className="relative flex h-36 items-center justify-center border-b border-vault-border bg-[radial-gradient(circle_at_50%_35%,rgba(255,114,159,0.2),transparent_45%),linear-gradient(135deg,#2b1638,#0d0916)]"><span className="absolute left-2 top-2 z-10 rounded bg-vault-red px-2 py-1 text-[10px] font-bold text-vault-bg">อาวุธ</span>{weapon.imageUrl ? <img src={weapon.imageUrl} alt={weapon.name} className="h-full w-full object-cover" /> : <span className="text-5xl text-vault-red/80">◈</span>}</div><div className="p-4"><div className="flex items-start justify-between gap-2"><p className="min-h-10 font-display text-base font-semibold text-vault-text">{weapon.name}</p><span className="rounded bg-vault-red/15 px-2 py-1 text-[10px] font-semibold text-vault-red">อาวุธ</span></div><p className="mt-2 font-mono text-2xl font-semibold text-vault-brass">{weapon.quantity}<span className="ml-1 text-xs text-vault-muted">ชิ้น</span></p><p className="mt-1 text-xs text-vault-muted">เจ้าของ: {weapon.ownerName}</p><p className="mt-1 text-xs text-vault-muted">{weapon.note || "ไม่มีหมายเหตุ"}</p><p className="mt-2 text-[11px] text-vault-muted">เพิ่มเมื่อ {formatDateTime(weapon.createdAt)}</p>{(profile?.role === "admin" || profile?.uid === weapon.ownerId) && <div className="mt-3 flex gap-3 border-t border-vault-border pt-2"><button onClick={() => manageWeapon(weapon, "edit")} className="text-xs text-vault-muted hover:text-vault-brass">แก้ไข</button><button onClick={() => manageWeapon(weapon, "delete")} className="text-xs text-vault-red hover:underline">ลบ</button></div>}</div></article>)}
+                {ownerWeapons.map((weapon) => <article key={weapon.id} className="group overflow-hidden rounded-lg border border-vault-border bg-vault-bg/70 transition duration-200 hover:-translate-y-0.5 hover:border-vault-red/60 hover:shadow-[0_12px_30px_-18px_rgba(181,101,75,0.75)]"><div className="relative flex h-36 items-center justify-center border-b border-vault-border bg-[radial-gradient(circle_at_50%_35%,rgba(255,114,159,0.2),transparent_45%),linear-gradient(135deg,#2b1638,#0d0916)]"><span className="absolute left-2 top-2 z-10 rounded border border-vault-red/40 bg-vault-red/90 px-2 py-1 text-[10px] font-bold text-vault-bg">อาวุธ</span>{weapon.imageUrl ? <img src={weapon.imageUrl} alt={weapon.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" /> : <span className="text-5xl text-vault-red/80">◈</span>}</div><div className="p-4"><div className="flex items-start justify-between gap-2"><p className="min-h-10 font-display text-base font-semibold text-vault-text">{weapon.name}</p><span className="rounded bg-vault-red/15 px-2 py-1 text-[10px] font-semibold text-vault-red">อาวุธ</span></div><p className="mt-2 font-mono text-2xl font-semibold text-vault-brass">{weapon.quantity}<span className="ml-1 text-xs text-vault-muted">ชิ้น</span></p><p className="mt-1 text-xs text-vault-muted">เจ้าของ: {weapon.ownerName}</p><p className="mt-1 text-xs text-vault-muted">{weapon.note || "ไม่มีหมายเหตุ"}</p><p className="mt-2 text-[11px] text-vault-muted">เพิ่มเมื่อ {formatDateTime(weapon.createdAt)}</p>{(profile?.role === "admin" || profile?.uid === weapon.ownerId) && <div className="mt-3 flex gap-3 border-t border-vault-border pt-2"><button onClick={() => manageWeapon(weapon, "edit")} className="text-xs text-vault-muted hover:text-vault-brass">แก้ไข</button><button onClick={() => manageWeapon(weapon, "delete")} className="text-xs text-vault-red hover:underline">ลบ</button></div>}</div></article>)}
               </div>
             </div>
           ))}
