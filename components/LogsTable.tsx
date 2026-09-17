@@ -3,8 +3,6 @@
 import { useTransactions } from "@/lib/hooks";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { Transaction } from "@/lib/types";
-import Link from "next/link";
-import { useMemo, useState } from "react";
 
 function StatusBadge({ status }: { status: Transaction["status"] }) {
   const map = {
@@ -24,12 +22,8 @@ function StatusBadge({ status }: { status: Transaction["status"] }) {
   );
 }
 
-export function LogsTable({ limit = 5, showAllLink = true }: { limit?: number; showAllLink?: boolean }) {
-  const { transactions, loading } = useTransactions(undefined, limit);
-  const [search, setSearch] = useState("");
-  const visibleTransactions = useMemo(() => transactions.filter((tx) =>
-    `${tx.requestedByName} ${tx.targetLabel} ${tx.note ?? ""}`.toLowerCase().includes(search.toLowerCase().trim())
-  ), [transactions, search]);
+export function LogsTable() {
+  const { transactions, loading } = useTransactions(undefined, 30);
 
   return (
     <section className="vault-reveal rounded-lg border border-vault-border bg-vault-surface shadow-panel">
@@ -38,10 +32,6 @@ export function LogsTable({ limit = 5, showAllLink = true }: { limit?: number; s
           ประวัติล่าสุด
         </h2>
         <p className="text-xs text-vault-muted">ใครทำรายการอะไร เมื่อไหร่</p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหาประวัติ..." className="w-full rounded-md border border-vault-border bg-vault-bg px-3 py-2 text-sm text-vault-text outline-none focus:border-vault-brass" />
-          {showAllLink && <Link href="/history" className="rounded-md border border-vault-border px-3 py-2 text-center text-xs text-vault-brass hover:bg-vault-surface2">ดูทั้งหมด</Link>}
-        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -63,27 +53,23 @@ export function LogsTable({ limit = 5, showAllLink = true }: { limit?: number; s
                 </td>
               </tr>
             )}
-            {!loading && visibleTransactions.length === 0 && (
+            {!loading && transactions.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-6 text-center text-vault-muted">
                   ยังไม่มีประวัติรายการ
                 </td>
               </tr>
             )}
-            {visibleTransactions.map((tx) => (
+            {transactions.map((tx) => (
               <tr key={tx.id} className="text-vault-text">
                 <td className="px-6 py-3">{tx.requestedByName}</td>
                 <td className="px-4 py-3">
                   <span
                     className={
-                      tx.targetType === "weapon"
-                        ? tx.action === "remove_weapon" ? "text-vault-red" : "text-vault-brass"
-                        : tx.kind === "deposit" ? "text-vault-green" : "text-vault-red"
+                      tx.kind === "deposit" ? "text-vault-green" : "text-vault-red"
                     }
                   >
-                    {tx.targetType === "weapon"
-                      ? tx.action === "remove_weapon" ? "ลบอาวุธ" : "เพิ่มอาวุธ"
-                      : tx.kind === "deposit" ? "ฝาก" : "เบิก"}
+                    {tx.kind === "deposit" ? "ฝาก" : "เบิก"}
                   </span>{" "}
                   {tx.targetLabel}
                 </td>

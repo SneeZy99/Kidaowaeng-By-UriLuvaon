@@ -18,19 +18,6 @@ export async function POST(
       const tx = txSnap.data()!;
       if (tx.status !== "pending") throw new Error("รายการนี้ถูกดำเนินการไปแล้ว");
 
-      if (
-        !["deposit", "withdraw"].includes(tx.kind) ||
-        !["money", "item"].includes(tx.targetType) ||
-        typeof tx.targetKey !== "string" ||
-        !tx.targetKey ||
-        typeof tx.amount !== "number" ||
-        !Number.isFinite(tx.amount) ||
-        tx.amount <= 0 ||
-        (tx.targetType === "money" && !["cash", "redMoney"].includes(tx.targetKey))
-      ) {
-        throw new Error("ข้อมูลคำขอไม่ถูกต้อง");
-      }
-
       const delta = tx.kind === "deposit" ? tx.amount : -tx.amount;
 
       if (tx.targetType === "money") {

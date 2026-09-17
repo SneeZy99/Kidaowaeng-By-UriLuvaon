@@ -1,17 +1,16 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { auth } from "@/lib/firebase";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { CATEGORY_LABELS, ItemCategory } from "@/lib/types";
 
-const CATEGORIES: ItemCategory[] = ["drug", "equipment"];
+const CATEGORIES: ItemCategory[] = ["weapon", "drug", "equipment"];
 
 export function AddItemForm() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<ItemCategory>("drug");
-  const [quantity, setQuantity] = useState("0");
-  const [imageUrl, setImageUrl] = useState("");
+  const [category, setCategory] = useState<ItemCategory>("weapon");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -19,22 +18,14 @@ export function AddItemForm() {
     if (!name.trim()) return;
     setSubmitting(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) throw new Error("ไม่พบ session");
-      const response = await fetch("/api/inventory", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: name.trim(), category, quantity: Number(quantity), imageUrl: imageUrl.trim() }),
+      await addDoc(collection(db, "inventory"), {
+        name: name.trim(),
+        category,
+        quantity: 0,
+        updatedAt: Date.now(),
       });
-      if (!response.ok) throw new Error("เพิ่มไอเทมไม่สำเร็จ");
       setName("");
-      setQuantity("0");
-      setImageUrl("");
       setOpen(false);
-      window.location.reload();
     } catch (err) {
       console.error(err);
     } finally {
@@ -78,22 +69,6 @@ export function AddItemForm() {
           </option>
         ))}
       </select>
-      <input
-        type="number"
-        min={0}
-        value={quantity}
-        onChange={(e) => setQuantity(e.target.value)}
-        placeholder="จำนวน"
-        className="w-28 rounded-md border border-vault-border bg-vault-bg px-3 py-2 text-sm text-vault-text outline-none focus:border-vault-brass"
-        required
-      />
-      <input
-        type="url"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        placeholder="ลิงก์รูป Discord"
-        className="min-w-[180px] flex-1 rounded-md border border-vault-border bg-vault-bg px-3 py-2 text-sm text-vault-text outline-none focus:border-vault-brass"
-      />
       <div className="flex gap-2">
         <button
           type="submit"

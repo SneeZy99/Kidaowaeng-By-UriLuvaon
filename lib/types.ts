@@ -1,8 +1,9 @@
-export type MoneyKey = "cash" | "redMoney";
+export type MoneyKey = "cash" | "redMoney" | "bank";
 
 export const MONEY_LABELS: Record<MoneyKey, string> = {
-  cash: "เงินเขียว",
+  cash: "เงินสด",
   redMoney: "เงินแดง",
+  bank: "เงินธนาคาร",
 };
 
 export type ItemCategory = "weapon" | "drug" | "equipment";
@@ -20,12 +21,21 @@ export interface AppUser {
   avatarUrl: string;
   role: "member" | "admin";
   createdAt: number;
+  /** In-character first + last name, e.g. "John Doe" — required before using the site. */
+  icName?: string;
+  /** Set by an admin to revoke access; the account is also disabled in Firebase Auth. */
+  disabled?: boolean;
+}
+
+/** The display name used everywhere in the UI: IC name once set, Discord name until then. */
+export function displayName(user: Pick<AppUser, "icName" | "username">): string {
+  return user.icName?.trim() || user.username;
 }
 
 export interface Treasury {
   cash: number;
   redMoney: number;
-  
+  bank: number;
   updatedAt: number;
 }
 
@@ -34,12 +44,11 @@ export interface InventoryItem {
   name: string;
   category: ItemCategory;
   quantity: number;
-  imageUrl?: string;
   updatedAt: number;
 }
 
 export type TransactionKind = "deposit" | "withdraw";
-export type TransactionTargetType = "money" | "item" | "weapon";
+export type TransactionTargetType = "money" | "item";
 export type TransactionStatus = "pending" | "approved" | "rejected";
 
 export interface Transaction {
@@ -60,17 +69,4 @@ export interface Transaction {
   reviewedByName?: string;
   reviewedAt?: number;
   rejectReason?: string;
-  action?: "add_weapon" | "remove_weapon";
-}
-
-export interface WeaponRecord {
-  id: string;
-  name: string;
-  quantity: number;
-  imageUrl?: string;
-  note?: string;
-  ownerId: string;
-  ownerName: string;
-  ownerAvatar?: string;
-  createdAt: number;
 }

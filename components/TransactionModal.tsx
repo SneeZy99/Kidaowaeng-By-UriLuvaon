@@ -1,7 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { requestTransaction } from "@/lib/firestore-helpers";
 import type { TransactionKind, TransactionTargetType } from "@/lib/types";
@@ -26,11 +25,6 @@ export function TransactionModal({
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const unit = targetType === "money" ? "฿" : "ชิ้น";
 
@@ -63,12 +57,10 @@ export function TransactionModal({
     }
   };
 
-  if (!mounted) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 px-4 py-4 sm:items-center">
-      <div className="vault-reveal flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col overflow-hidden rounded-lg border border-vault-border bg-vault-surface shadow-panel">
-        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-vault-border bg-vault-surface px-5 py-4">
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 px-4">
+      <div className="vault-reveal w-full max-w-sm rounded-lg border border-vault-border bg-vault-surface shadow-panel">
+        <div className="flex items-center justify-between border-b border-vault-border px-5 py-4">
           <h3 className="font-display text-base font-semibold text-vault-text">
             {targetLabel}
           </h3>
@@ -95,7 +87,7 @@ export function TransactionModal({
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto px-5 py-5">
+          <form onSubmit={handleSubmit} className="space-y-4 px-5 py-5">
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -152,26 +144,16 @@ export function TransactionModal({
 
             {error && <p className="text-sm text-vault-red">{error}</p>}
 
-            <div className="flex gap-2 pt-1">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 rounded-md border border-vault-border px-4 py-2.5 text-sm text-vault-muted transition hover:border-vault-brass/60 hover:text-vault-text"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 rounded-md bg-vault-brass px-4 py-2.5 text-sm font-medium text-vault-bg transition hover:bg-vault-amber disabled:opacity-50"
-              >
-                {submitting ? "กำลังส่ง..." : "ส่งคำขอ"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-md bg-vault-brass px-4 py-2.5 text-sm font-medium text-vault-bg transition hover:bg-vault-amber disabled:opacity-50"
+            >
+              {submitting ? "กำลังส่งคำขอ..." : "ส่งคำขอให้หัวหน้าแก๊งอนุมัติ"}
+            </button>
           </form>
         )}
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }

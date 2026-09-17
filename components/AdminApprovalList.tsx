@@ -1,44 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/components/AuthProvider";
+import { useTransactions } from "@/lib/hooks";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { Transaction } from "@/lib/types";
 
 export function AdminApprovalList() {
   const { firebaseUser } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { transactions, loading } = useTransactions("pending", 100);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const visibleTransactions = useMemo(() => transactions.filter((tx) =>
-    `${tx.requestedByName} ${tx.targetLabel} ${tx.note ?? ""}`.toLowerCase().includes(search.toLowerCase().trim())
-  ), [transactions, search]);
-
-  const loadTransactions = async () => {
-    if (!firebaseUser) return;
-    setLoading(true);
-    try {
-      const idToken = await firebaseUser.getIdToken();
-      const res = await fetch("/api/transactions?status=pending", {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "โหลดรายการไม่สำเร็จ");
-      setTransactions((data.transactions as Transaction[]).slice(0, 10));
-    } catch (err) {
-      console.error(err);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadTransactions();
-  }, [firebaseUser]);
 
   async function callApi(tx: Transaction, action: "approve" | "reject") {
     if (!firebaseUser) return;
@@ -57,7 +30,6 @@ export function AdminApprovalList() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "ดำเนินการไม่สำเร็จ");
       }
-      setTransactions((current) => current.filter((item) => item.id !== tx.id));
     } catch (err) {
       console.error(err);
       setErrorId(tx.id);
@@ -75,20 +47,19 @@ export function AdminApprovalList() {
         <p className="text-xs text-vault-muted">
           ยอดคงคลังจะเปลี่ยนก็ต่อเมื่อกดอนุมัติเท่านั้น
         </p>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหาสมาชิกหรือรายการ..." className="mt-3 w-full rounded-md border border-vault-border bg-vault-bg px-3 py-2 text-sm text-vault-text outline-none focus:border-vault-brass" />
       </div>
 
       <div className="divide-y divide-vault-border">
         {loading && (
           <p className="px-6 py-6 text-sm text-vault-muted">กำลังโหลด...</p>
         )}
-        {!loading && visibleTransactions.length === 0 && (
+        {!loading && transactions.length === 0 && (
           <p className="px-6 py-10 text-center text-sm text-vault-muted">
             ไม่มีรายการรออนุมัติในขณะนี้
           </p>
         )}
 
-        {visibleTransactions.map((tx) => (
+        {transactions.map((tx) => (
           <div
             key={tx.id}
             className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"

@@ -1,8 +1,10 @@
-import { auth } from "@/lib/firebase";
-import type {
-  AppUser,
-  TransactionKind,
-  TransactionTargetType,
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import {
+  displayName,
+  type AppUser,
+  type TransactionKind,
+  type TransactionTargetType,
 } from "@/lib/types";
 
 /**
@@ -20,27 +22,19 @@ export async function requestTransaction(params: {
   amount: number;
   note?: string;
 }) {
-  const { kind, targetType, targetKey, targetLabel, amount, note } = params;
+  const { user, kind, targetType, targetKey, targetLabel, amount, note } = params;
 
-  const token = await auth.currentUser?.getIdToken();
-  if (!token) throw new Error("ไม่พบ session การเข้าสู่ระบบ");
-
-  const response = await fetch("/api/transactions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      kind,
-      targetType,
-      targetKey,
-      targetLabel,
-      amount,
-      note: note ?? "",
-    }),
+  await addDoc(collection(db, "transactions"), {
+    kind,
+    targetType,
+    targetKey,
+    targetLabel,
+    amount,
+    note: note ?? "",
+    status: "pending",
+    requestedBy: user.uid,
+    requestedByName: displayName(user),
+    requestedByAvatar: user.avatarUrl ?? "",
+    createdAt: serverTimestamp(),
   });
-
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error ?? "ส่งคำขอไม่สำเร็จ");
 }
