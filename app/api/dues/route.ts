@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       const unpaid = currentIndex < firstIndex ? [] : Array.from({ length: currentIndex - firstIndex + 1 }, (_, offset) => firstIndex + offset).filter((index) => !paid.has(`${doc.id}_${periodKey(index)}`));
       return { uid: doc.id, name: user.icName || user.displayName || user.username || "สมาชิกแก๊ง", avatarUrl: user.avatarUrl || "", outstandingAmount: unpaid.length * config.amount, outstandingPeriods: unpaid.length, oldestDueAt: unpaid.length ? config.startAt + unpaid[0] * interval : undefined, currentPeriodKey: currentIndex >= 0 ? periodKey(currentIndex) : undefined, currentDueAt: currentIndex >= 0 ? config.startAt + currentIndex * interval : undefined, paidCurrentPeriod: currentIndex < 0 || paid.has(`${doc.id}_${periodKey(currentIndex)}`) };
     });
-    return NextResponse.json({ config, statuses: isAdmin ? statuses : statuses.filter((status) => status.uid === viewer.uid), isAdmin });
+    return NextResponse.json({ config, statuses, isAdmin });
   } catch (error) {
     console.error("Dues read failed", error);
     return NextResponse.json({ error: "โหลดข้อมูลค่างวดไม่สำเร็จ" }, { status: 401 });
@@ -62,12 +62,42 @@ export async function PATCH(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = await verifyAdmin(req);
+    const payer = await getViewer(req);
     const body = await req.json();
     const memberId = typeof body.memberId === "string" ? body.memberId : "";
     const period = typeof body.periodKey === "string" ? body.periodKey : "";
     if (!memberId || !/^period-\d+$/.test(period)) return NextResponse.json({ error: "รอบชำระไม่ถูกต้อง" }, { status: 400 });
-    await adminDb.collection("duesPayments").doc(`${memberId}_${period}`).set({ memberId, periodKey: period, paidAt: Date.now(), paidBy: admin.uid });
+    const [member, payerProfile, configSnap] = await Promise.all([
+      adminDb.collection("users").doc(memberId).get(),
+      adminDb.collection("users").doc(payer.uid).get(),
+      adminDb.collection("settings").doc("gangDues").get(),
+    ]);
+    if (!member.exists) return NextResponse.json({ error: "ไม่พบสมาชิก" }, { status: 404 });
+    const paymentRef = adminDb.collection("duesPayments").doc(`${memberId}_${period}`);
+    if ((await paymentRef.get()).exists) return NextResponse.json({ ok: true, alreadyPaid: true });
+    const config = configSnap.data() ?? {};
+    const amount = Number(config.amount) || 0;
+    const frequency = config.frequency === "daily" ? "daily" : "weekly";
+    const periodIndex = Number(period.slice("period-".length));
+    const dueAt = (Number(config.startAt) || Date.now()) + periodIndex * (frequency === "daily" ? DAY : 7 * DAY);
+    const memberName = member.data()?.icName || member.data()?.displayName || member.data()?.username || "สมาชิกแก๊ง";
+    const payerName = payerProfile.data()?.icName || payerProfile.data()?.displayName || payerProfile.data()?.username || "สมาชิกแก๊ง";
+    const dueDate = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium" }).format(dueAt);
+    const paidAt = Date.now();
+    await paymentRef.set({ memberId, memberName, periodKey: period, paidAt, paidBy: payer.uid, paidByName: payerName, amount, frequency, dueAt });
+    await adminDb.collection("transactions").add({
+      kind: "deposit",
+      targetType: "dues",
+      targetKey: memberId,
+      targetLabel: `ค่างวดแก๊งของ ${memberName}`,
+      amount,
+      note: `${payerName} จ่ายแทน ${memberName} · ${frequency === "daily" ? "รอบรายวัน" : "รอบรายสัปดาห์"} · วันที่ ${dueDate}`,
+      status: "approved",
+      requestedBy: payer.uid,
+      requestedByName: payerName,
+      requestedByAvatar: payerProfile.data()?.avatarUrl ?? "",
+      createdAt: paidAt,
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status });

@@ -62,7 +62,7 @@ export interface InventoryItem {
 }
 
 export type TransactionKind = "deposit" | "withdraw";
-export type TransactionTargetType = "money" | "item" | "weapon";
+export type TransactionTargetType = "money" | "item" | "weapon" | "dues";
 export type TransactionStatus = "pending" | "approved" | "rejected";
 
 export interface Transaction {

@@ -55,7 +55,6 @@ export function InventoryPanel() {
       <div className="border-b border-vault-border px-6 py-5">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-vault-brass">Vault Market</p>
             <h2 className="mt-1 font-display text-2xl font-semibold text-vault-text">คลังไอเทม</h2>
             <p className="mt-1 text-xs text-vault-muted">รายการไอเทมทั้งหมดในคลังแก๊ง</p>
           </div>

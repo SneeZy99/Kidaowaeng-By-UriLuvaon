@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue, Query } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
+import type { Transaction } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
       query = query.where("requestedBy", "==", decoded.uid);
     }
     const snapshot = await query.get();
-    const transactions = snapshot.docs
+    const rawTransactions: Transaction[] = snapshot.docs
       .map((doc) => {
         const data = doc.data();
         return {
@@ -42,10 +43,24 @@ export async function GET(req: NextRequest) {
           ...data,
           createdAt: data.createdAt?.toMillis?.() ?? 0,
           reviewedAt: data.reviewedAt?.toMillis?.() ?? undefined,
-        };
+        } as Transaction;
       })
       .sort((a, b) => b.createdAt - a.createdAt)
       .slice(0, 100);
+
+    // Keep the approval list current when a member changes their IC name.
+    // Older transaction documents only contain the Discord name, so resolve
+    // the profile here and fall back gracefully for incomplete profiles.
+    const requesterIds = [...new Set(rawTransactions.map((transaction) => transaction.requestedBy).filter(Boolean))];
+    const requesterProfiles = await Promise.all(requesterIds.map(async (uid) => {
+      const profile = await adminDb.collection("users").doc(uid).get();
+      return [uid, profile.data()?.icName || profile.data()?.displayName || profile.data()?.username] as const;
+    }));
+    const namesByRequester = new Map(requesterProfiles);
+    const transactions = rawTransactions.map((transaction) => ({
+      ...transaction,
+      requestedByName: namesByRequester.get(transaction.requestedBy) || transaction.requestedByName,
+    }));
 
     return NextResponse.json({ transactions });
   } catch (error) {
@@ -99,7 +114,7 @@ export async function POST(req: NextRequest) {
       note: typeof note === "string" ? note.slice(0, 500) : "",
       status: "pending",
       requestedBy: decoded.uid,
-      requestedByName: user.username ?? "สมาชิกแก๊ง",
+      requestedByName: user.icName ?? user.displayName ?? user.username ?? "สมาชิกแก๊ง",
       requestedByAvatar: user.avatarUrl ?? "",
       createdAt: FieldValue.serverTimestamp(),
     });

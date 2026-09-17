@@ -11,7 +11,7 @@ const LINKS = [
   { href: "/dashboard", label: "ภาพรวมคลัง" },
   { href: "/members", label: "สมาชิก" },
   { href: "/weapons", label: "คลังอาวุธ" },
-  { href: "/dues", label: "ค่างวดแก๊ง", adminOnly: true },
+  { href: "/dues", label: "ค่างวดแก๊ง" },
   { href: "/admin", label: "อนุมัติรายการ", adminOnly: true },
 ];
 

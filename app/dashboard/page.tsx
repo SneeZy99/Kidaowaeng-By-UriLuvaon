@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { TreasuryPanel } from "@/components/TreasuryPanel";
 import { InventoryPanel } from "@/components/InventoryPanel";
 import { LogsTable } from "@/components/LogsTable";
+import { MyDuesCard } from "@/components/MyDuesCard";
 
 export default function DashboardPage() {
   return (
@@ -11,6 +12,7 @@ export default function DashboardPage() {
         <Navbar />
         <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
           <TreasuryPanel />
+          <MyDuesCard />
           <InventoryPanel />
           <LogsTable />
         </main>

@@ -76,19 +76,24 @@ export function LogsTable({ limit = 5, showAllLink = true }: { limit?: number; s
                 <td className="px-4 py-3">
                   <span
                     className={
-                      tx.targetType === "weapon"
+                      tx.targetType === "dues"
+                        ? "text-vault-brass"
+                        : tx.targetType === "weapon"
                         ? tx.action === "remove_weapon" ? "text-vault-red" : "text-vault-brass"
                         : tx.kind === "deposit" ? "text-vault-green" : "text-vault-red"
                     }
                   >
-                    {tx.targetType === "weapon"
+                    {tx.targetType === "dues"
+                      ? "จ่ายค่างวดแก๊ง"
+                      : tx.targetType === "weapon"
                       ? tx.action === "remove_weapon" ? "ลบอาวุธ" : "เพิ่มอาวุธ"
                       : tx.kind === "deposit" ? "ฝาก" : "เบิก"}
                   </span>{" "}
                   {tx.targetLabel}
+                  {tx.note && <p className="mt-1 max-w-md text-xs text-vault-muted">{tx.note}</p>}
                 </td>
                 <td className="ledger-figure px-4 py-3 font-mono">
-                  {tx.targetType === "money"
+                  {tx.targetType === "money" || tx.targetType === "dues"
                     ? `${formatMoney(tx.amount)} ฿`
                     : `${tx.amount} ชิ้น`}
                 </td>
