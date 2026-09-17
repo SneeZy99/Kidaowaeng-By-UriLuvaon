@@ -23,19 +23,28 @@ async function getUser(req: NextRequest) {
   const decoded = await verifyGuildMember(req);
   const userSnap = await adminDb.collection("users").doc(decoded.uid).get();
   const user = userSnap.data() ?? {};
-  return { uid: decoded.uid, username: user.username ?? decoded.username ?? "สมาชิกแก๊ง", avatarUrl: user.avatarUrl ?? decoded.avatarUrl ?? "" };
+  return {
+    uid: decoded.uid,
+    username: user.username ?? decoded.username ?? "สมาชิกแก๊ง",
+    icName: user.icName ?? user.displayName ?? "",
+    avatarUrl: user.avatarUrl ?? decoded.avatarUrl ?? "",
+  };
 }
 
 export async function GET(req: NextRequest) {
   try {
     await getUser(req);
     const snapshot = await adminDb.collection("weapons").get();
+    const ownerIds = [...new Set(snapshot.docs.map((doc) => doc.data().ownerId).filter((id): id is string => typeof id === "string"))];
+    const ownerSnapshots = await Promise.all(ownerIds.map((uid) => adminDb.collection("users").doc(uid).get()));
+    const ownerNames = new Map(ownerSnapshots.map((owner) => [owner.id, owner.data()?.icName || owner.data()?.displayName]));
     const weapons = snapshot.docs
       .map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
           ...data,
+          ownerName: ownerNames.get(data.ownerId) || data.ownerName,
           createdAt: data.createdAt?.toMillis?.() ?? 0,
         };
       })
@@ -65,7 +74,7 @@ export async function POST(req: NextRequest) {
       note,
       imageUrl,
       ownerId: user.uid,
-      ownerName: user.username,
+      ownerName: user.icName || user.username,
       ownerAvatar: user.avatarUrl,
       createdAt: FieldValue.serverTimestamp(),
     });
@@ -79,7 +88,7 @@ export async function POST(req: NextRequest) {
       status: "approved",
       action: "add_weapon",
       requestedBy: user.uid,
-      requestedByName: user.username,
+      requestedByName: user.icName || user.username,
       requestedByAvatar: user.avatarUrl,
       createdAt: FieldValue.serverTimestamp(),
     });
