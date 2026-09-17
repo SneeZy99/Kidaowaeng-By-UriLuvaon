@@ -37,11 +37,10 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded-md px-3 py-2 text-sm transition ${
-                    active
+                  className={`rounded-md px-3 py-2 text-sm transition ${active
                       ? "bg-vault-surface2 text-vault-brass"
                       : "text-vault-muted hover:text-vault-text"
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -77,3 +76,4 @@ export function Navbar() {
     </header>
   );
 }
+ไไไไ
