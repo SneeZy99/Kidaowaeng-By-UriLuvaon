@@ -9,12 +9,14 @@ export function ProfileModal({
   profile,
   onClose,
   onSaved,
+  mandatory = false,
 }: {
   profile: AppUser;
   onClose: () => void;
-  onSaved: (changes: Pick<AppUser, "username" | "avatarUrl">) => void;
+  onSaved: (changes: Pick<AppUser, "icName">) => void;
+  mandatory?: boolean;
 }) {
-  const [username, setUsername] = useState(profile.username);
+  const [icName, setIcName] = useState(profile.icName ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -38,11 +40,11 @@ export function ProfileModal({
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ icName }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "บันทึกไม่สำเร็จ");
-      onSaved({ username: result.username, avatarUrl: result.avatarUrl });
+      onSaved({ icName: result.icName });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ");
@@ -61,9 +63,7 @@ export function ProfileModal({
             <p className="text-xs uppercase tracking-[0.18em] text-vault-brass">Profile</p>
             <h2 className="mt-1 font-display text-xl font-semibold text-vault-text">แก้ไขโปรไฟล์</h2>
           </div>
-          <button onClick={onClose} className="text-xl text-vault-muted hover:text-vault-text" aria-label="ปิด">
-            ×
-          </button>
+          {!mandatory && <button onClick={onClose} className="text-xl text-vault-muted hover:text-vault-text" aria-label="ปิด">×</button>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 px-5 py-5">
@@ -74,30 +74,30 @@ export function ProfileModal({
               <div className="flex h-12 w-12 items-center justify-center rounded-full border border-vault-border text-vault-brass">✦</div>
             )}
             <div>
-              <p className="text-sm text-vault-text">{profile.discordId}</p>
-              <p className="text-xs text-vault-muted">Discord ID ของคุณ</p>
+              <p className="text-sm text-vault-text">@{profile.username}</p>
+              <p className="text-xs text-vault-muted">Discord account</p>
             </div>
           </div>
 
           <label className="block">
-            <span className="mb-1 block text-xs text-vault-muted">ชื่อที่แสดง</span>
+            <span className="mb-1 block text-xs text-vault-muted">ชื่อ-นามสกุล IC</span>
             <input
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              maxLength={32}
+              value={icName}
+              onChange={(event) => setIcName(event.target.value)}
+              minLength={3}
+              maxLength={60}
               required
+              placeholder="เช่น Naruto Uzumaki"
               className="w-full rounded-md border border-vault-border bg-vault-bg px-3 py-2 text-sm text-vault-text outline-none focus:border-vault-brass"
             />
           </label>
 
-          <p className="text-xs text-vault-muted">รูปโปรไฟล์จะอิงจาก Discord โดยอัตโนมัติ</p>
+          <p className="text-xs text-vault-muted">กรอกชื่อและนามสกุลที่ใช้ในเกม รูปโปรไฟล์จะอิงจาก Discord โดยอัตโนมัติ</p>
 
           {error && <p className="text-sm text-vault-red">{error}</p>}
 
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 rounded-md border border-vault-border px-4 py-2.5 text-sm text-vault-muted hover:text-vault-text">
-              ยกเลิก
-            </button>
+            {!mandatory && <button type="button" onClick={onClose} className="flex-1 rounded-md border border-vault-border px-4 py-2.5 text-sm text-vault-muted hover:text-vault-text">ยกเลิก</button>}
             <button type="submit" disabled={saving} className="flex-1 rounded-md bg-vault-brass px-4 py-2.5 text-sm font-medium text-vault-bg hover:bg-vault-amber disabled:opacity-50">
               {saving ? "กำลังบันทึก..." : "บันทึกโปรไฟล์"}
             </button>

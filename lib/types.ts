@@ -24,6 +24,27 @@ export interface AppUser {
   displayName?: string;
 }
 
+export type DuesFrequency = "daily" | "weekly";
+
+export interface GangDuesConfig {
+  amount: number;
+  frequency: DuesFrequency;
+  startAt: number;
+  enabled: boolean;
+}
+
+export interface MemberDuesStatus {
+  uid: string;
+  name: string;
+  avatarUrl: string;
+  outstandingAmount: number;
+  outstandingPeriods: number;
+  oldestDueAt?: number;
+  currentPeriodKey?: string;
+  currentDueAt?: number;
+  paidCurrentPeriod: boolean;
+}
+
 export interface Treasury {
   cash: number;
   redMoney: number;
