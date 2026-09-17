@@ -16,8 +16,8 @@ export function RequireAuth({
 
   useEffect(() => {
     if (loading) return;
-    if (!firebaseUser) {
-      router.replace("/login");
+    if (!firebaseUser || !profile?.guildMember) {
+      router.replace(firebaseUser ? "/members" : "/login");
       return;
     }
     if (adminOnly && profile && profile.role !== "admin") {
@@ -25,7 +25,7 @@ export function RequireAuth({
     }
   }, [loading, firebaseUser, profile, adminOnly, router]);
 
-  if (loading || !firebaseUser || (adminOnly && profile?.role !== "admin")) {
+  if (loading || !firebaseUser || !profile?.guildMember || (adminOnly && profile?.role !== "admin")) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-vault-bg">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-vault-brass border-t-transparent" />

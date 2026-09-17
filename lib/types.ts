@@ -22,6 +22,8 @@ export interface AppUser {
   createdAt: number;
   icName?: string;
   displayName?: string;
+  facebookUrl?: string;
+  guildMember?: boolean;
 }
 
 export type DuesFrequency = "daily" | "weekly";

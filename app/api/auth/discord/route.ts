@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   authorizeUrl.searchParams.set("client_id", clientId);
   authorizeUrl.searchParams.set("redirect_uri", redirectUri);
   authorizeUrl.searchParams.set("response_type", "code");
-  authorizeUrl.searchParams.set("scope", "identify");
+  authorizeUrl.searchParams.set("scope", "identify guilds.members.read");
   authorizeUrl.searchParams.set("state", state);
   authorizeUrl.searchParams.set("prompt", "consent");
 

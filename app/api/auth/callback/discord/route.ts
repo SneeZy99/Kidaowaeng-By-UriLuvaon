@@ -29,8 +29,10 @@ export async function GET(req: NextRequest) {
   const clientId = process.env.DISCORD_CLIENT_ID!;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET!;
   const redirectUri = process.env.DISCORD_REDIRECT_URI!;
+  const guildId = process.env.DISCORD_GUILD_ID;
 
   try {
+    if (!guildId) throw new Error("Missing DISCORD_GUILD_ID");
     // 1. Exchange the authorization code for an access token.
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
@@ -54,6 +56,17 @@ export async function GET(req: NextRequest) {
     if (!profileRes.ok) throw new Error("Failed to fetch Discord profile");
     const profile: DiscordUser = await profileRes.json();
 
+    // This endpoint is only available after the user consents to the
+    // guilds.members.read scope. A 404 means they are not in this server.
+    const guildMemberRes = await fetch(`https://discord.com/api/v10/users/@me/guilds/${guildId}/member`, {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    if (guildMemberRes.status === 404) {
+      loginUrl.searchParams.set("error", "not_in_guild");
+      return NextResponse.redirect(loginUrl);
+    }
+    if (!guildMemberRes.ok) throw new Error("Failed to verify Discord guild membership");
+
     const avatarUrl = profile.avatar
       ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=128`
       : `https://cdn.discordapp.com/embed/avatars/${Number(profile.discriminator ?? 0) % 5}.png`;
@@ -74,6 +87,7 @@ export async function GET(req: NextRequest) {
         username,
         avatarUrl,
         role,
+        guildMember: true,
         createdAt: existing.exists ? existing.data()?.createdAt ?? Date.now() : Date.now(),
       },
       { merge: true }
@@ -81,7 +95,7 @@ export async function GET(req: NextRequest) {
 
     // Keep the Auth user record's custom claims in sync too, so the role
     // stays correct even on a session that never re-runs this callback.
-    await adminAuth.setCustomUserClaims(uid, { role }).catch(() => {});
+    await adminAuth.setCustomUserClaims(uid, { role, guildMember: true }).catch(() => {});
 
     // 4. Mint a Firebase custom token. The claims here are also used as a
     // fallback profile on the client (see AuthProvider) if the Firestore
@@ -91,6 +105,7 @@ export async function GET(req: NextRequest) {
       username,
       avatarUrl,
       discordId: profile.id,
+      guildMember: true,
     });
 
     // 5. Hand the token to the client via a short-lived cookie so it never

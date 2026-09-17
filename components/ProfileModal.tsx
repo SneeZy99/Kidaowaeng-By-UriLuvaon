@@ -17,6 +17,7 @@ export function ProfileModal({
   mandatory?: boolean;
 }) {
   const [icName, setIcName] = useState(profile.icName ?? "");
+  const [facebookUrl, setFacebookUrl] = useState(profile.facebookUrl ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -40,7 +41,7 @@ export function ProfileModal({
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ icName }),
+        body: JSON.stringify({ icName, facebookUrl }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "บันทึกไม่สำเร็จ");
@@ -88,6 +89,17 @@ export function ProfileModal({
               maxLength={60}
               required
               placeholder="เช่น Naruto Uzumaki"
+              className="w-full rounded-md border border-vault-border bg-vault-bg px-3 py-2 text-sm text-vault-text outline-none focus:border-vault-brass"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs text-vault-muted">ลิงก์ Facebook (ไม่บังคับ)</span>
+            <input
+              type="url"
+              value={facebookUrl}
+              onChange={(event) => setFacebookUrl(event.target.value)}
+              placeholder="https://www.facebook.com/your.profile"
               className="w-full rounded-md border border-vault-border bg-vault-bg px-3 py-2 text-sm text-vault-text outline-none focus:border-vault-brass"
             />
           </label>

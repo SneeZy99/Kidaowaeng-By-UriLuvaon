@@ -13,7 +13,7 @@ import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
 import type { AppUser, InventoryItem, Transaction, Treasury, TransactionStatus, WeaponRecord } from "@/lib/types";
 
-export function useMembers() {
+export function useMembers(authUid?: string) {
   const [members, setMembers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,8 +22,7 @@ export function useMembers() {
     void (async () => {
       try {
         const token = await auth.currentUser?.getIdToken();
-        if (!token) throw new Error("missing auth token");
-        const response = await fetch("/api/members", { headers: { Authorization: `Bearer ${token}` } });
+        const response = await fetch("/api/members", { headers: token ? { Authorization: `Bearer ${token}` } : {} });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error);
         if (!cancelled) setMembers(result.members as AppUser[]);
@@ -35,7 +34,7 @@ export function useMembers() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [authUid]);
 
   return { members, loading };
 }

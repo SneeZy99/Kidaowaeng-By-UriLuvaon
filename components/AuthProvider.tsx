@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [firebaseUser]);
 
   useEffect(() => {
-    if (!loading && firebaseUser && profile) {
+    if (!loading && firebaseUser && profile?.guildMember) {
     
       if (!profile.icName && pathname !== "/onboarding" && pathname !== "/login") {
         router.replace("/onboarding");

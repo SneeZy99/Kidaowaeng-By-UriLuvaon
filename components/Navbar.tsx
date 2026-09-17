@@ -33,7 +33,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <div className="flex items-center gap-8">
           <Link href="/dashboard" className="font-display text-lg font-semibold tracking-[0.02em] text-vault-text transition hover:text-vault-brass">THE VAULT<span className="ml-1 text-[9px] tracking-[0.2em] text-vault-brass">//01</span></Link>
-          <nav className="hidden gap-1 rounded-full border border-vault-border/70 bg-vault-bg/40 p-1 sm:flex">
+          {profile?.guildMember && <nav className="hidden gap-1 rounded-full border border-vault-border/70 bg-vault-bg/40 p-1 sm:flex">
             {LINKS.filter((l) => !l.adminOnly || profile?.role === "admin").map((link) => {
               const active = pathname === link.href;
               return (
@@ -49,7 +49,7 @@ export function Navbar() {
                 </Link>
               );
             })}
-          </nav>
+          </nav>}
         </div>
 
         {profile && (
@@ -69,6 +69,7 @@ export function Navbar() {
             </button>
           </div>
         )}
+        {!profile && <Link href="/login" className="rounded-full border border-vault-brass/50 px-3 py-1.5 text-xs font-semibold text-vault-brass transition hover:bg-vault-brass hover:text-vault-bg">เข้าสู่ระบบ Discord</Link>}
       </div>
       {profile && profileOpen && <ProfileModal profile={profile} onClose={() => setProfileOpen(false)} onSaved={() => setProfileOpen(false)} />}
     </header>

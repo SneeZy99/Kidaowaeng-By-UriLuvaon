@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_state: "เซสชันล็อกอินหมดอายุ กรุณาลองใหม่อีกครั้ง",
   oauth_failed: "เชื่อมต่อกับ Discord ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+  not_in_guild: "บัญชี Discord นี้ยังไม่ได้อยู่ในเซิร์ฟเวอร์แก๊ง จึงเข้าดูได้เฉพาะรายชื่อสมาชิก",
 };
 
 export default function LoginPage() {
