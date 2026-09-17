@@ -23,7 +23,7 @@ const jbmono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Vault — ระบบคลังแก๊ง",
+  title: "KidAowAeng",
   description: "ระบบจัดการคลังเงินและไอเทมของแก๊ง",
 };
 
