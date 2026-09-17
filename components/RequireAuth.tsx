@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 export function RequireAuth({
@@ -13,8 +13,6 @@ export function RequireAuth({
 }) {
   const { firebaseUser, profile, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const needsIcName = !!profile && !profile.icName && pathname !== "/onboarding";
 
   useEffect(() => {
     if (loading) return;
@@ -22,21 +20,12 @@ export function RequireAuth({
       router.replace("/login");
       return;
     }
-    if (needsIcName) {
-      router.replace("/onboarding");
-      return;
-    }
     if (adminOnly && profile && profile.role !== "admin") {
       router.replace("/dashboard");
     }
-  }, [loading, firebaseUser, profile, adminOnly, needsIcName, router]);
+  }, [loading, firebaseUser, profile, adminOnly, router]);
 
-  if (
-    loading ||
-    !firebaseUser ||
-    needsIcName ||
-    (adminOnly && profile?.role !== "admin")
-  ) {
+  if (loading || !firebaseUser || (adminOnly && profile?.role !== "admin")) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-vault-bg">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-vault-brass border-t-transparent" />

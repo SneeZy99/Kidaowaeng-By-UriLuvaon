@@ -4,9 +4,6 @@ Next.js (App Router) + Tailwind CSS + Firebase (Auth + Firestore realtime) + Dis
 
 รองรับ 25–30 ผู้ใช้ พร้อมระบบ **อนุมัติก่อนตัดยอดจริง** (deposit/withdraw ต้องผ่านหัวหน้าแก๊งก่อนยอดในคลังจะเปลี่ยน)
 
-> **อัปเดตล่าสุด:** เพิ่มหน้า "สมาชิก" (ดูรายชื่อ, แอดมินแก้ role/ลบสมาชิกได้) และบังคับตั้งชื่อ-นามสกุล IC
-> ก่อนใช้งานครั้งแรก — ไม่ต้องเพิ่มตัวแปร `.env` ใหม่ และไม่ต้อง deploy `firestore.rules` ใหม่ (ไม่มีการแก้กฎ)
-
 ---
 
 ## 1. โครงสร้างโปรเจกต์
@@ -17,16 +14,10 @@ app/
   login/complete/page.tsx     รับ custom token แล้ว sign-in Firebase
   dashboard/page.tsx          ยอดเงิน + คลังไอเทม + ประวัติ (ทุกคนเข้าได้)
   admin/page.tsx              อนุมัติ/ปฏิเสธคำขอ (เฉพาะ role=admin)
-  members/page.tsx            รายชื่อสมาชิกทั้งหมด + แอดมินแก้ role/ลบสมาชิกได้
-  onboarding/page.tsx         บังคับตั้งชื่อ-นามสกุล IC ก่อนใช้งานครั้งแรก
   api/auth/discord/route.ts            → redirect ไป Discord OAuth
   api/auth/callback/discord/route.ts   → แลก code, สร้าง/อัปเดต user, mint custom token
   api/transactions/[id]/approve/route.ts  → อนุมัติ (แก้ยอดแบบ atomic)
   api/transactions/[id]/reject/route.ts   → ปฏิเสธ
-  api/users/me/ic-name/route.ts        → สมาชิกตั้งชื่อ IC ของตัวเอง
-  api/users/[id]/role/route.ts         → แอดมินเปลี่ยน role สมาชิก
-  api/users/[id]/remove/route.ts       → แอดมินลบ (ปิดสิทธิ์) สมาชิก
-  api/users/[id]/restore/route.ts      → แอดมินกู้คืนสมาชิกที่เคยลบ
 components/        UI components (Navbar, TreasuryPanel, InventoryPanel, ...)
 lib/                firebase.ts (client), firebaseAdmin.ts (server), hooks.ts, types.ts
 firestore.rules     กฎความปลอดภัยของ Firestore
@@ -108,35 +99,10 @@ npm run dev
 - **หัวหน้าแก๊ง (admin)**: เห็นเมนู "อนุมัติรายการ" เพิ่มขึ้นมา → กดอนุมัติ/ปฏิเสธคำขอแต่ละรายการ
   ระบบจะตัด/เติมยอดให้อัตโนมัติแบบ atomic (ป้องกันยอดติดลบ/แข่งกันกดพร้อมกัน)
 - แอดมินยังเพิ่ม **ไอเทมชนิดใหม่** เข้าคลังได้จากปุ่ม "+ เพิ่มไอเทมใหม่เข้าคลัง" ในหน้า Dashboard
-- **ล็อกอินครั้งแรก**: ทุกคน (รวมแอดมิน) ต้องตั้ง **ชื่อ-นามสกุล IC** ก่อน ถึงจะเข้าหน้า Dashboard/Members/Admin ได้
-  ชื่อนี้จะถูกใช้แสดงแทนชื่อ Discord ในทุกที่ (ประวัติรายการ, รายชื่อสมาชิก, มุมขวาบน)
-- **หน้า "สมาชิก"**: ทุกคนดูรายชื่อสมาชิกทั้งหมดได้ (ชื่อ IC, Discord username, วันที่เข้าร่วม, role)
-  แอดมินมีสิทธิ์เพิ่มเติม:
-  - เปลี่ยน role สมาชิก ↔ หัวหน้าแก๊ง ได้จาก dropdown (สั่งได้ทันที ระบบจะบังคับให้เซสชันเดิมของคนนั้นหมดอายุ
-    เพื่อให้สิทธิ์ใหม่มีผลจริง)
-  - **ลบสมาชิกออกจากเว็บ**: เป็นการ "ปิดสิทธิ์" ไม่ใช่ลบข้อมูลถาวร — ชื่อยังคงอยู่ในประวัติรายการเก่า
-    แต่บัญชี Discord นั้นจะล็อกอินกลับเข้ามาไม่ได้อีกจนกว่าจะกด "กู้คืน"
-  - แอดมินเปลี่ยน role หรือลบตัวเองไม่ได้ (กันบัญชีตัวเองถูกล็อก)
 
 ---
 
-## 6. Deploy ทับของเดิมด้วย Git + Vercel
-
-ถ้ามี repo และเชื่อม Vercel ไว้แล้ว (auto-deploy เมื่อ push เข้า branch หลัก) ให้ก็อปไฟล์ที่แก้/เพิ่ม
-ทับของเดิมในเครื่อง แล้วรันตามนี้:
-
-```bash
-git add -A
-git commit -m "feat: members page, role/remove management, force IC name onboarding"
-git push origin main   # หรือชื่อ branch ที่ Vercel ตั้ง auto-deploy ไว้
-```
-
-Vercel จะ build/deploy ให้อัตโนมัติหลัง push (ดูสถานะได้ที่แท็บ Deployments ใน Vercel dashboard)
-ไม่ต้องตั้งค่า environment variable เพิ่มเติม เพราะฟีเจอร์ใหม่ใช้ค่าที่มีอยู่แล้วทั้งหมด
-
----
-
-## 7. หมายเหตุด้านความปลอดภัย
+## 6. หมายเหตุด้านความปลอดภัย
 
 - ค่าที่ขึ้นต้นด้วย `NEXT_PUBLIC_` เท่านั้นที่ปลอดภัยจะฝังในโค้ดฝั่งเบราว์เซอร์
 - `FIREBASE_PRIVATE_KEY`, `DISCORD_CLIENT_SECRET`, `ADMIN_DISCORD_IDS` **ต้องอยู่ฝั่งเซิร์ฟเวอร์เท่านั้น**

@@ -13,6 +13,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.role == "admin";
     }
 
+    function isValidTransaction() {
+      return request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.kind in ["deposit", "withdraw"]
+        && request.resource.data.targetType in ["money", "item"]
+        && request.resource.data.targetKey is string
+        && request.resource.data.targetKey != ""
+        && (request.resource.data.targetType != "money"
+          || request.resource.data.targetKey in ["cash", "redMoney"]);
+    }
+
     // Member profiles — written only by the server (Admin SDK) during login.
     match /users/{uid} {
       allow read: if isSignedIn();
@@ -43,7 +54,8 @@ service cloud.firestore {
       // Members may only create their own, always starting as "pending".
       allow create: if isSignedIn()
                     && request.resource.data.requestedBy == request.auth.uid
-                    && request.resource.data.status == "pending";
+                    && request.resource.data.status == "pending"
+                    && isValidTransaction();
       // Approving/rejecting is only done server-side with the Admin SDK,
       // which bypasses these rules entirely.
       allow update: if false;

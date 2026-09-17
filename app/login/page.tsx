@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_state: "เซสชันล็อกอินหมดอายุ กรุณาลองใหม่อีกครั้ง",
   oauth_failed: "เชื่อมต่อกับ Discord ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
-  banned: "บัญชีนี้ถูกลบออกจากระบบโดยหัวหน้าแก๊ง กรุณาติดต่อผู้ดูแล",
 };
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { firebaseUser, loading } = useAuth();
@@ -62,5 +62,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

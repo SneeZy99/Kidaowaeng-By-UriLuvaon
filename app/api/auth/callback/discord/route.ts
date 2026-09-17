@@ -11,6 +11,7 @@ interface DiscordUser {
   username: string;
   global_name: string | null;
   avatar: string | null;
+  discriminator?: string;
 }
 
 export async function GET(req: NextRequest) {
@@ -31,9 +32,12 @@ export async function GET(req: NextRequest) {
 
   try {
     // 1. Exchange the authorization code for an access token.
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+    const tokenRes = await fetch("https://discord.com/api/v10/oauth2/token", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
       body: new URLSearchParams({
         client_id: clientId,
         client_secret: clientSecret,
@@ -43,7 +47,11 @@ export async function GET(req: NextRequest) {
       }),
     });
 
-    if (!tokenRes.ok) throw new Error("Discord token exchange failed");
+    if (!tokenRes.ok) {
+      const errorDetails = await tokenRes.text();
+      console.error("Discord token exchange failed", tokenRes.status, errorDetails);
+      throw new Error("Discord token exchange failed");
+    }
     const tokenData: DiscordTokenResponse = await tokenRes.json();
 
     // 2. Fetch the Discord profile.
@@ -64,32 +72,28 @@ export async function GET(req: NextRequest) {
     // 3. Upsert the user document in Firestore.
     const userRef = adminDb.collection("users").doc(uid);
     const existing = await userRef.get();
-
-    // A member an admin removed cannot log back in — their Firebase Auth
-    // account is also disabled, but we bail out early here too so we never
-    // touch their profile fields or mint them a token.
-    if (existing.exists && existing.data()?.disabled) {
-      loginUrl.searchParams.set("error", "banned");
-      return NextResponse.redirect(loginUrl);
-    }
-
+    const existingData = existing.data();
+    const savedUsername = existingData?.username || username;
     await userRef.set(
       {
         uid,
         discordId: profile.id,
-        username,
+        username: savedUsername,
         avatarUrl,
-        role: isAdmin ? "admin" : existing.exists ? existing.data()?.role ?? "member" : "member",
-        createdAt: existing.exists ? existing.data()?.createdAt ?? Date.now() : Date.now(),
-        // icName is intentionally left untouched here — it's set once by the
-        // member themselves on /onboarding and never overwritten on re-login.
+        role: isAdmin ? "admin" : existing.exists ? existingData?.role ?? "member" : "member",
+        createdAt: existing.exists ? existingData?.createdAt ?? Date.now() : Date.now(),
       },
       { merge: true }
     );
 
     // 4. Mint a Firebase custom token carrying the gang role as a claim.
-    const finalRole = isAdmin ? "admin" : existing.data()?.role ?? "member";
-    const customToken = await adminAuth.createCustomToken(uid, { role: finalRole });
+    const finalRole = isAdmin ? "admin" : existingData?.role ?? "member";
+    const customToken = await adminAuth.createCustomToken(uid, {
+      role: finalRole,
+      username: savedUsername,
+      avatarUrl,
+      discordId: profile.id,
+    });
 
     // 5. Hand the token to the client via a URL fragment so it never touches server logs.
     const completeUrl = new URL("/login/complete", url.origin);

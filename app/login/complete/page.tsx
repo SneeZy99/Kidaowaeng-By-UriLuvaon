@@ -32,8 +32,7 @@ export default function LoginCompletePage() {
       .catch((err) => {
         console.error(err);
         setError("เข้าสู่ระบบไม่สำเร็จ");
-        const code = err?.code === "auth/user-disabled" ? "banned" : "oauth_failed";
-        setTimeout(() => router.replace(`/login?error=${code}`), 1500);
+        setTimeout(() => router.replace("/login?error=oauth_failed"), 1500);
       });
   }, [router]);
 

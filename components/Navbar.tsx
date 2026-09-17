@@ -1,21 +1,23 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { displayName } from "@/lib/types";
+import { ProfileModal } from "@/components/ProfileModal";
 
 const LINKS = [
   { href: "/dashboard", label: "ภาพรวมคลัง" },
-  { href: "/members", label: "สมาชิก" },
+  { href: "/weapons", label: "คลังอาวุธ" },
+  { href: "/history", label: "ประวัติทั้งหมด" },
   { href: "/admin", label: "อนุมัติรายการ", adminOnly: true },
 ];
 
 export function Navbar() {
-  const { profile, logout } = useAuth();
+  const { profile, logout, updateProfile } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -53,19 +55,31 @@ export function Navbar() {
 
         {profile && (
           <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm text-vault-text">{displayName(profile)}</p>
-              <p className="text-xs text-vault-muted">
-                {profile.role === "admin" ? "หัวหน้าแก๊ง" : "สมาชิก"}
-              </p>
-            </div>
-            <Image
-              src={profile.avatarUrl}
-              alt={displayName(profile)}
-              width={36}
-              height={36}
-              className="rounded-full border border-vault-border"
-            />
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="group flex items-center gap-2 text-right"
+              title="แก้ไขโปรไฟล์"
+            >
+              <div className="hidden sm:block">
+                <p className="text-sm text-vault-text group-hover:text-vault-brass">
+                  {profile.username}
+                </p>
+                <p className="text-xs text-vault-muted">
+                  Discord member · {profile.role === "admin" ? "หัวหน้าแก๊ง" : "สมาชิกแก๊ง"}
+                </p>
+              </div>
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.username}
+                  className="h-9 w-9 rounded-full border border-vault-brass/50 object-cover transition group-hover:border-vault-brass"
+                />
+              ) : (
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-vault-brass/50 text-vault-brass">
+                  ✦
+                </span>
+              )}
+            </button>
             <button
               onClick={handleLogout}
               className="rounded-md border border-vault-border px-3 py-2 text-xs text-vault-muted transition hover:border-vault-red/50 hover:text-vault-red"
@@ -75,6 +89,13 @@ export function Navbar() {
           </div>
         )}
       </div>
+      {profile && profileOpen && (
+        <ProfileModal
+          profile={profile}
+          onClose={() => setProfileOpen(false)}
+          onSaved={updateProfile}
+        />
+      )}
     </header>
   );
 }
