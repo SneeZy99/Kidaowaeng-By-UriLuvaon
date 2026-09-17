@@ -32,8 +32,8 @@ export function Navbar() {
     <header className="sticky top-0 z-20 border-b border-vault-border/80 bg-vault-bg/75 shadow-[0_1px_0_rgba(195,154,93,0.18),0_10px_30px_-22px_rgba(0,0,0,0.9)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <div className="flex items-center gap-8">
-          <Link href="/" aria-label="K2A home" className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md transition hover:scale-105" title="K2A">
-            <Image src="/k2a-logo.png" alt="K2A" width={160} height={160} priority className="h-24 w-24 max-w-none object-cover object-center invert contrast-125" />
+          <Link href="/" aria-label="K2A home" className="flex h-12 w-12 items-center justify-center rounded-md transition hover:scale-105" title="K2A">
+            <Image src="/k2a-nav.png" alt="K2A" width={1750} height={2850} priority className="h-11 w-8 object-contain invert contrast-125" />
           </Link>
           {profile?.guildMember && <nav className="hidden gap-1 rounded-full border border-vault-border/70 bg-vault-bg/40 p-1 sm:flex">
             {LINKS.filter((l) => !l.adminOnly || profile?.role === "admin").map((link) => {
