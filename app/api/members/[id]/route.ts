@@ -20,12 +20,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const body = await req.json();
     const icName = typeof body.icName === "string" ? body.icName.trim().replace(/\s+/g, " ") : "";
     const facebook = facebookUrl(body.facebookUrl ?? "");
-    if (icName.length < 2 || icName.length > 60 || facebook === null) {
+    const role = body.role === undefined ? undefined : body.role === "admin" || body.role === "member" ? body.role : null;
+    if (icName.length < 2 || icName.length > 60 || facebook === null || role === null) {
       return NextResponse.json({ error: "Invalid member details" }, { status: 400 });
     }
     const ref = adminDb.collection("users").doc(params.id);
     if (!(await ref.get()).exists) return NextResponse.json({ error: "Member not found" }, { status: 404 });
-    await ref.update({ icName, displayName: icName, facebookUrl: facebook });
+    await ref.update({ icName, displayName: icName, facebookUrl: facebook, ...(role ? { role } : {}) });
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status });
