@@ -22,7 +22,6 @@ export async function GET(req: NextRequest) {
   authorizeUrl.searchParams.set("prompt", "consent");
 
   const res = NextResponse.redirect(authorizeUrl.toString());
-  // Short-lived cookie to validate the state param on callback (CSRF protection).
   res.cookies.set("discord_oauth_state", state, {
     httpOnly: true,
     secure: true,

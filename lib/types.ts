@@ -1,9 +1,8 @@
-export type MoneyKey = "cash" | "redMoney" | "bank";
+export type MoneyKey = "cash" | "redMoney";
 
 export const MONEY_LABELS: Record<MoneyKey, string> = {
-  cash: "เงินสด",
+  cash: "เงินเขียว",
   redMoney: "เงินแดง",
-  bank: "เงินธนาคาร",
 };
 
 export type ItemCategory = "weapon" | "drug" | "equipment";
@@ -26,7 +25,7 @@ export interface AppUser {
 export interface Treasury {
   cash: number;
   redMoney: number;
-  bank: number;
+
   updatedAt: number;
 }
 
@@ -35,11 +34,12 @@ export interface InventoryItem {
   name: string;
   category: ItemCategory;
   quantity: number;
+  imageUrl?: string;
   updatedAt: number;
 }
 
 export type TransactionKind = "deposit" | "withdraw";
-export type TransactionTargetType = "money" | "item";
+export type TransactionTargetType = "money" | "item" | "weapon";
 export type TransactionStatus = "pending" | "approved" | "rejected";
 
 export interface Transaction {
@@ -60,4 +60,17 @@ export interface Transaction {
   reviewedByName?: string;
   reviewedAt?: number;
   rejectReason?: string;
+  action?: "add_weapon" | "remove_weapon";
+}
+
+export interface WeaponRecord {
+  id: string;
+  name: string;
+  quantity: number;
+  imageUrl?: string;
+  note?: string;
+  ownerId: string;
+  ownerName: string;
+  ownerAvatar?: string;
+  createdAt: number;
 }
