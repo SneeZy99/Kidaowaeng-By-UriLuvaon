@@ -1,6 +1,14 @@
-import { redirect } from "next/navigation";
+import { MembersPanel } from "@/components/MembersPanel";
+import { Navbar } from "@/components/Navbar";
+import { RequireAuth } from "@/components/RequireAuth";
 
-// Keep older bookmarks working: the member weapon registry now lives at /weapons.
 export default function MembersPage() {
-  redirect("/weapons");
+  return (
+    <RequireAuth>
+      <div className="min-h-screen bg-vault-bg">
+        <Navbar />
+        <MembersPanel />
+      </div>
+    </RequireAuth>
+  );
 }

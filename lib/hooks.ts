@@ -11,7 +11,34 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
-import type { InventoryItem, Transaction, Treasury, TransactionStatus, WeaponRecord } from "@/lib/types";
+import type { AppUser, InventoryItem, Transaction, Treasury, TransactionStatus, WeaponRecord } from "@/lib/types";
+
+export function useMembers() {
+  const [members, setMembers] = useState<AppUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) throw new Error("missing auth token");
+        const response = await fetch("/api/members", { headers: { Authorization: `Bearer ${token}` } });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        if (!cancelled) setMembers(result.members as AppUser[]);
+      } catch (error) {
+        console.error("Failed to load members", error);
+        if (!cancelled) setMembers([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return { members, loading };
+}
 
 export function useTreasury() {
   const [treasury, setTreasury] = useState<Treasury | null>(null);

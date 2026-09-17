@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 
 const LINKS = [
   { href: "/dashboard", label: "ภาพรวมคลัง" },
+  { href: "/members", label: "สมาชิก" },
   { href: "/weapons", label: "คลังอาวุธ" },
   { href: "/admin", label: "อนุมัติรายการ", adminOnly: true },
 ];
