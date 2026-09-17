@@ -66,15 +66,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const memberId = typeof body.memberId === "string" ? body.memberId : "";
     const period = typeof body.periodKey === "string" ? body.periodKey : "";
-    if (!memberId || !/^period-\d+$/.test(period)) return NextResponse.json({ error: "รอบชำระไม่ถูกต้อง" }, { status: 400 });
+    const detail = typeof body.detail === "string" ? body.detail.trim().slice(0, 500) : "";
+    if (!memberId || !/^period-\d+$/.test(period) || !detail) return NextResponse.json({ error: "กรุณาระบุรายละเอียดการจ่ายและรอบชำระให้ถูกต้อง" }, { status: 400 });
     const [member, payerProfile, configSnap] = await Promise.all([
       adminDb.collection("users").doc(memberId).get(),
       adminDb.collection("users").doc(payer.uid).get(),
       adminDb.collection("settings").doc("gangDues").get(),
     ]);
     if (!member.exists) return NextResponse.json({ error: "ไม่พบสมาชิก" }, { status: 404 });
-    const paymentRef = adminDb.collection("duesPayments").doc(`${memberId}_${period}`);
-    if ((await paymentRef.get()).exists) return NextResponse.json({ ok: true, alreadyPaid: true });
     const config = configSnap.data() ?? {};
     const amount = Number(config.amount) || 0;
     const frequency = config.frequency === "daily" ? "daily" : "weekly";
@@ -83,22 +82,24 @@ export async function POST(req: NextRequest) {
     const memberName = member.data()?.icName || member.data()?.displayName || member.data()?.username || "สมาชิกแก๊ง";
     const payerName = payerProfile.data()?.icName || payerProfile.data()?.displayName || payerProfile.data()?.username || "สมาชิกแก๊ง";
     const dueDate = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium" }).format(dueAt);
-    const paidAt = Date.now();
-    await paymentRef.set({ memberId, memberName, periodKey: period, paidAt, paidBy: payer.uid, paidByName: payerName, amount, frequency, dueAt });
     await adminDb.collection("transactions").add({
       kind: "deposit",
       targetType: "dues",
       targetKey: memberId,
       targetLabel: `ค่างวดแก๊งของ ${memberName}`,
       amount,
-      note: `${payerName} จ่ายแทน ${memberName} · ${frequency === "daily" ? "รอบรายวัน" : "รอบรายสัปดาห์"} · วันที่ ${dueDate}`,
-      status: "approved",
+      note: `${payerName} ขอจ่ายแทน ${memberName} · ${frequency === "daily" ? "รอบรายวัน" : "รอบรายสัปดาห์"} · วันที่ ${dueDate} · รายละเอียด: ${detail}`,
+      duesPeriod: period,
+      duesDueAt: dueAt,
+      duesFrequency: frequency,
+      duesDetail: detail,
+      status: "pending",
       requestedBy: payer.uid,
       requestedByName: payerName,
       requestedByAvatar: payerProfile.data()?.avatarUrl ?? "",
-      createdAt: paidAt,
+      createdAt: Date.now(),
     });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, pending: true });
   } catch (error) {
     if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status });
     return NextResponse.json({ error: "บันทึกการชำระไม่สำเร็จ" }, { status: 500 });

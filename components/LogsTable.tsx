@@ -4,7 +4,7 @@ import { useTransactions } from "@/lib/hooks";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { Transaction } from "@/lib/types";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function StatusBadge({ status }: { status: Transaction["status"] }) {
   const map = {
@@ -24,12 +24,17 @@ function StatusBadge({ status }: { status: Transaction["status"] }) {
   );
 }
 
-export function LogsTable({ limit = 5, showAllLink = true }: { limit?: number; showAllLink?: boolean }) {
+export function LogsTable({ limit = 5, showAllLink = true, pageSize }: { limit?: number; showAllLink?: boolean; pageSize?: number }) {
   const { transactions, loading } = useTransactions(undefined, limit);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const visibleTransactions = useMemo(() => transactions.filter((tx) =>
     `${tx.requestedByName} ${tx.targetLabel} ${tx.note ?? ""}`.toLowerCase().includes(search.toLowerCase().trim())
   ), [transactions, search]);
+  useEffect(() => { setPage(1); }, [search]);
+  const totalPages = pageSize ? Math.max(1, Math.ceil(visibleTransactions.length / pageSize)) : 1;
+  const currentPage = Math.min(page, totalPages);
+  const displayedTransactions = pageSize ? visibleTransactions.slice((currentPage - 1) * pageSize, currentPage * pageSize) : visibleTransactions;
 
   return (
     <section className="vault-reveal rounded-lg border border-vault-border bg-vault-surface shadow-panel">
@@ -70,7 +75,7 @@ export function LogsTable({ limit = 5, showAllLink = true }: { limit?: number; s
                 </td>
               </tr>
             )}
-            {visibleTransactions.map((tx) => (
+            {displayedTransactions.map((tx) => (
               <tr key={tx.id} className="text-vault-text">
                 <td className="px-6 py-3">{tx.requestedByName}</td>
                 <td className="px-4 py-3">
@@ -108,6 +113,7 @@ export function LogsTable({ limit = 5, showAllLink = true }: { limit?: number; s
           </tbody>
         </table>
       </div>
+      {pageSize && visibleTransactions.length > pageSize && <div className="flex items-center justify-between border-t border-vault-border px-6 py-4"><p className="text-xs text-vault-muted">แสดง {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, visibleTransactions.length)} จาก {visibleTransactions.length} รายการ</p><div className="flex items-center gap-2"><button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={currentPage === 1} className="rounded border border-vault-border px-3 py-1.5 text-xs text-vault-muted disabled:opacity-40">ก่อนหน้า</button><span className="font-mono text-xs text-vault-brass">{currentPage} / {totalPages}</span><button onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={currentPage === totalPages} className="rounded border border-vault-border px-3 py-1.5 text-xs text-vault-muted disabled:opacity-40">ถัดไป</button></div></div>}
     </section>
   );
 }

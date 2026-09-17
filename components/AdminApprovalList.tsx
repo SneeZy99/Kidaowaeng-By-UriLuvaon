@@ -115,12 +115,12 @@ export function AdminApprovalList() {
                     }
                   >
                     {" "}
-                    {tx.kind === "deposit" ? "ฝาก" : "เบิก"}{" "}
+                    {tx.targetType === "dues" ? "จ่ายค่างวด" : tx.kind === "deposit" ? "ฝาก" : "เบิก"}{" "}
                   </span>
                   {tx.targetLabel}
                 </p>
                 <p className="ledger-figure font-mono text-xs text-vault-muted">
-                  {tx.targetType === "money"
+                  {tx.targetType === "money" || tx.targetType === "dues"
                     ? `${formatMoney(tx.amount)} ฿`
                     : `${tx.amount} ชิ้น`}{" "}
                   · {formatDateTime(tx.createdAt)}

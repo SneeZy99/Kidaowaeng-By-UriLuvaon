@@ -21,6 +21,7 @@ export function InventoryPanel() {
   const [draftSearch, setDraftSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | ItemCategory>("all");
   const [sort, setSort] = useState<"name" | "quantity">("name");
+  const [page, setPage] = useState(1);
 
   const manageItem = async (item: InventoryItem, action: "edit" | "delete") => {
     const token = await auth.currentUser?.getIdToken();
@@ -50,6 +51,10 @@ export function InventoryPanel() {
     )
     .sort((a, b) => sort === "name" ? a.name.localeCompare(b.name) : b.quantity - a.quantity),
   [items, search, categoryFilter, sort]);
+  const pageSize = 20;
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = filteredItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   return (
     <section className="vault-reveal overflow-hidden rounded-lg border border-vault-border bg-vault-surface shadow-panel">
       <div className="border-b border-vault-border px-6 py-5">
@@ -62,17 +67,17 @@ export function InventoryPanel() {
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-vault-border bg-vault-bg/60 px-3 py-3">
           {[["all", "ทั้งหมด"], ["drug", "ยา"], ["equipment", "อุปกรณ์"]].map(([value, label]) => (
-            <button key={value} onClick={() => setCategoryFilter(value as "all" | ItemCategory)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${categoryFilter === value ? "bg-vault-brass text-vault-bg" : "border border-vault-border text-vault-muted hover:text-vault-text"}`}>
+            <button key={value} onClick={() => { setCategoryFilter(value as "all" | ItemCategory); setPage(1); }} className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${categoryFilter === value ? "bg-vault-brass text-vault-bg" : "border border-vault-border text-vault-muted hover:text-vault-text"}`}>
               {label}
             </button>
           ))}
-          <select value={sort} onChange={(e) => setSort(e.target.value as "name" | "quantity")} className="rounded-md border border-vault-border bg-vault-surface px-3 py-1.5 text-xs text-vault-muted outline-none focus:border-vault-brass">
+          <select value={sort} onChange={(e) => { setSort(e.target.value as "name" | "quantity"); setPage(1); }} className="rounded-md border border-vault-border bg-vault-surface px-3 py-1.5 text-xs text-vault-muted outline-none focus:border-vault-brass">
             <option value="name">เรียงตามชื่อ</option>
             <option value="quantity">เรียงตามจำนวน</option>
           </select>
           <div className="ml-auto flex min-w-[220px] flex-1 gap-2 sm:max-w-sm">
-            <input value={draftSearch} onChange={(e) => setDraftSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setSearch(draftSearch)} placeholder="ค้นหาเพิ่มเติม" className="min-w-0 flex-1 rounded-md border border-vault-border bg-vault-surface px-3 py-1.5 text-xs text-vault-text outline-none focus:border-vault-brass" />
-            <button onClick={() => setSearch(draftSearch)} className="rounded-md bg-vault-brass px-3 py-1.5 text-xs font-semibold text-vault-bg hover:bg-vault-amber">ค้นหา</button>
+            <input value={draftSearch} onChange={(e) => setDraftSearch(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { setSearch(draftSearch); setPage(1); } }} placeholder="ค้นหาเพิ่มเติม" className="min-w-0 flex-1 rounded-md border border-vault-border bg-vault-surface px-3 py-1.5 text-xs text-vault-text outline-none focus:border-vault-brass" />
+            <button onClick={() => { setSearch(draftSearch); setPage(1); }} className="rounded-md bg-vault-brass px-3 py-1.5 text-xs font-semibold text-vault-bg hover:bg-vault-amber">ค้นหา</button>
           </div>
         </div>
       </div>
@@ -81,7 +86,7 @@ export function InventoryPanel() {
         {loading && <p className="py-10 text-center text-sm text-vault-muted">กำลังโหลด...</p>}
         {!loading && filteredItems.length === 0 && <p className="py-10 text-center text-sm text-vault-muted">ยังไม่มีไอเทมที่ตรงกับการค้นหา</p>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredItems.map((item) => (
+              {pageItems.map((item) => (
                 <article
                   key={item.id}
                   className="overflow-hidden rounded-lg border border-vault-border bg-vault-bg/70 transition hover:-translate-y-0.5 hover:border-vault-brass/70"
@@ -104,6 +109,7 @@ export function InventoryPanel() {
                 </article>
               ))}
         </div>
+        {!loading && filteredItems.length > pageSize && <div className="mt-5 flex items-center justify-between border-t border-vault-border pt-4"><p className="text-xs text-vault-muted">แสดง {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredItems.length)} จาก {filteredItems.length} รายการ</p><div className="flex items-center gap-2"><button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={currentPage === 1} className="rounded border border-vault-border px-3 py-1.5 text-xs text-vault-muted disabled:opacity-40">ก่อนหน้า</button><span className="font-mono text-xs text-vault-brass">{currentPage} / {totalPages}</span><button onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={currentPage === totalPages} className="rounded border border-vault-border px-3 py-1.5 text-xs text-vault-muted disabled:opacity-40">ถัดไป</button></div></div>}
       </div>
 
       {profile?.role === "admin" && <AddItemForm />}

@@ -20,7 +20,26 @@ export async function POST(
 
       const delta = tx.kind === "deposit" ? tx.amount : -tx.amount;
 
-      if (tx.targetType === "money") {
+      if (tx.targetType === "dues") {
+        const period = typeof tx.duesPeriod === "string" ? tx.duesPeriod : "";
+        if (!period || !/^period-\d+$/.test(period)) throw new Error("ข้อมูลรอบค่างวดไม่ถูกต้อง");
+        const paymentRef = adminDb.collection("duesPayments").doc(`${tx.targetKey}_${period}`);
+        const paymentSnap = await t.get(paymentRef);
+        if (paymentSnap.exists) throw new Error("รอบค่างวดนี้ถูกชำระแล้ว");
+        t.set(paymentRef, {
+          memberId: tx.targetKey,
+          memberName: tx.targetLabel,
+          periodKey: period,
+          paidAt: Date.now(),
+          paidBy: tx.requestedBy,
+          paidByName: tx.requestedByName,
+          amount: tx.amount,
+          frequency: tx.duesFrequency ?? "weekly",
+          dueAt: tx.duesDueAt ?? 0,
+          detail: tx.duesDetail ?? tx.note ?? "",
+          approvedBy: admin.uid,
+        });
+      } else if (tx.targetType === "money") {
         const treasuryRef = adminDb.collection("treasury").doc("main");
         const treasurySnap = await t.get(treasuryRef);
         const current = treasurySnap.exists ? treasurySnap.data()! : {};
