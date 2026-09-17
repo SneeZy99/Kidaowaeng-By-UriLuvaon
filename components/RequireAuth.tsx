@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { isStaffRole } from "@/lib/roles";
 
 export function RequireAuth({
   children,
@@ -20,12 +21,12 @@ export function RequireAuth({
       router.replace(firebaseUser ? "/members" : "/login");
       return;
     }
-    if (adminOnly && profile && profile.role !== "admin") {
+    if (adminOnly && profile && !isStaffRole(profile.role)) {
       router.replace("/dashboard");
     }
   }, [loading, firebaseUser, profile, adminOnly, router]);
 
-  if (loading || !firebaseUser || !profile?.guildMember || (adminOnly && profile?.role !== "admin")) {
+  if (loading || !firebaseUser || !profile?.guildMember || (adminOnly && !isStaffRole(profile?.role))) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-vault-bg">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-vault-brass border-t-transparent" />

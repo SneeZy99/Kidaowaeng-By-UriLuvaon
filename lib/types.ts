@@ -1,3 +1,5 @@
+import type { UserRole } from "@/lib/roles";
+
 export type MoneyKey = "cash" | "redMoney";
 
 export const MONEY_LABELS: Record<MoneyKey, string> = {
@@ -18,7 +20,7 @@ export interface AppUser {
   discordId: string;
   username: string;
   avatarUrl: string;
-  role: "member" | "admin";
+  role: UserRole;
   createdAt: number;
   icName?: string;
   displayName?: string;

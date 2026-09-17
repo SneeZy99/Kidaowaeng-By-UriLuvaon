@@ -32,3 +32,11 @@ export function getAdminDiscordIds(): string[] {
     .map((id) => id.trim())
     .filter(Boolean);
 }
+
+/** Discord IDs that receive the VP role, with the same permissions as admins. */
+export function getVpDiscordIds(): string[] {
+  return (process.env.VP_DISCORD_IDS || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}

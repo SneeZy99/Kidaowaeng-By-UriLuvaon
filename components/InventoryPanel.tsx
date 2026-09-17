@@ -6,6 +6,7 @@ import { CATEGORY_LABELS, ItemCategory, InventoryItem } from "@/lib/types";
 import { TransactionModal } from "@/components/TransactionModal";
 import { AddItemForm } from "@/components/AddItemForm";
 import { useAuth } from "@/components/AuthProvider";
+import { isStaffRole } from "@/lib/roles";
 import { auth } from "@/lib/firebase";
 
 interface ModalState {
@@ -104,7 +105,7 @@ export function InventoryPanel() {
                       <button onClick={() => setModal({ item, kind: "deposit" })} className="rounded-md border border-vault-green/60 bg-vault-green/5 px-2 py-2 text-xs font-medium text-vault-green shadow-[0_0_14px_-10px_rgba(126,231,193,0.9)] hover:bg-vault-green/15">ฝาก</button>
                       <button onClick={() => setModal({ item, kind: "withdraw" })} className="rounded-md border border-vault-red/60 bg-vault-red/5 px-2 py-2 text-xs font-medium text-vault-red shadow-[0_0_14px_-10px_rgba(255,114,159,0.9)] hover:bg-vault-red/15">เบิก</button>
                     </div>
-                    {profile?.role === "admin" && <div className="mt-2 flex gap-2 border-t border-vault-border pt-2"><button onClick={() => manageItem(item, "edit")} className="text-xs text-vault-muted hover:text-vault-brass">แก้ไข</button><button onClick={() => manageItem(item, "delete")} className="text-xs text-vault-red hover:underline">ลบ</button></div>}
+                    {isStaffRole(profile?.role) && <div className="mt-2 flex gap-2 border-t border-vault-border pt-2"><button onClick={() => manageItem(item, "edit")} className="text-xs text-vault-muted hover:text-vault-brass">แก้ไข</button><button onClick={() => manageItem(item, "delete")} className="text-xs text-vault-red hover:underline">ลบ</button></div>}
                   </div>
                 </article>
               ))}
@@ -112,7 +113,7 @@ export function InventoryPanel() {
         {!loading && filteredItems.length > pageSize && <div className="mt-5 flex items-center justify-between border-t border-vault-border pt-4"><p className="text-xs text-vault-muted">แสดง {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredItems.length)} จาก {filteredItems.length} รายการ</p><div className="flex items-center gap-2"><button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={currentPage === 1} className="rounded border border-vault-border px-3 py-1.5 text-xs text-vault-muted disabled:opacity-40">ก่อนหน้า</button><span className="font-mono text-xs text-vault-brass">{currentPage} / {totalPages}</span><button onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={currentPage === totalPages} className="rounded border border-vault-border px-3 py-1.5 text-xs text-vault-muted disabled:opacity-40">ถัดไป</button></div></div>}
       </div>
 
-      {profile?.role === "admin" && <AddItemForm />}
+      {isStaffRole(profile?.role) && <AddItemForm />}
 
       {modal && (
         <TransactionModal

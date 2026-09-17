@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb, getAdminDiscordIds } from "@/lib/firebaseAdmin";
+import { adminAuth, adminDb, getAdminDiscordIds, getVpDiscordIds } from "@/lib/firebaseAdmin";
 
 interface DiscordTokenResponse {
   access_token: string;
@@ -80,11 +80,13 @@ export async function GET(req: NextRequest) {
     const username = profile.global_name || profile.username;
     const uid = `discord:${profile.id}`;
     const isAdmin = getAdminDiscordIds().includes(profile.id);
+    const isVp = getVpDiscordIds().includes(profile.id);
 
     // 3. Upsert the user document in Firestore.
     const userRef = adminDb.collection("users").doc(uid);
     const existing = await userRef.get();
-    const role = isAdmin ? "admin" : existing.exists ? existing.data()?.role ?? "member" : "member";
+    // Admin takes precedence if an ID accidentally appears in both lists.
+    const role = isAdmin ? "admin" : isVp ? "vp" : existing.exists ? existing.data()?.role ?? "member" : "member";
 
     await userRef.set(
       {

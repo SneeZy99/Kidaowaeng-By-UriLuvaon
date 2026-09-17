@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
+import { isStaffRole } from "@/lib/roles";
 import { verifyGuildMember } from "@/lib/verifyMember";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     const interval = config.frequency === "daily" ? DAY : 7 * DAY;
     const currentIndex = config.enabled && config.amount > 0 ? Math.max(0, Math.floor((Date.now() - config.startAt) / interval)) : -1;
     const paid = new Set(paymentsSnap.docs.map((doc) => doc.id));
-    const isAdmin = viewerSnap.data()?.role === "admin";
+    const isAdmin = isStaffRole(viewerSnap.data()?.role);
     const statuses = usersSnap.docs.map((doc) => {
       const user = doc.data();
       const joinedAt = Number(user.createdAt) || config.startAt;

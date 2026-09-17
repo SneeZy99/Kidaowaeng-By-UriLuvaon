@@ -10,7 +10,7 @@ service cloud.firestore {
     function isAdmin() {
       // Custom claim "role" is set when the server mints the Firebase
       // custom token during the Discord OAuth callback (see route.ts).
-      return isSignedIn() && request.auth.token.role == "admin";
+      return isSignedIn() && (request.auth.token.role == "admin" || request.auth.token.role == "vp");
     }
 
     function isGuildMember() {

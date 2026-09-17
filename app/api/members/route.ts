@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
+import { isStaffRole } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -29,14 +30,14 @@ export async function GET(req: NextRequest) {
           discordId: data.discordId ?? "",
           username: data.username ?? "สมาชิกแก๊ง",
           avatarUrl: data.avatarUrl ?? "",
-          role: data.role === "admin" ? "admin" : "member",
+          role: data.role === "admin" || data.role === "vp" ? data.role : "member",
           icName,
           displayName: data.displayName ?? "",
           facebookUrl: data.facebookUrl ?? "",
           createdAt: data.createdAt?.toMillis?.() ?? data.createdAt ?? 0,
         };
       })
-      .sort((a, b) => Number(b.role === "admin") - Number(a.role === "admin") || a.icName.localeCompare(b.icName));
+      .sort((a, b) => Number(isStaffRole(b.role)) - Number(isStaffRole(a.role)) || a.icName.localeCompare(b.icName));
 
     return NextResponse.json({ members, isMember });
   } catch (error) {

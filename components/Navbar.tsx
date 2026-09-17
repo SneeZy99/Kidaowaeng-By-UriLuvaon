@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { ProfileModal } from "@/components/ProfileModal";
 import { useState } from "react";
+import { isStaffRole, roleLabel } from "@/lib/roles";
 
 const LINKS = [
   { href: "/dashboard", label: "ภาพรวมคลัง" },
@@ -36,7 +37,7 @@ export function Navbar() {
             <Image src="/k2a-nav.png" alt="K2A" width={1750} height={2850} priority className="h-11 w-8 object-contain invert contrast-125" />
           </Link>
           {profile?.guildMember && <nav className="hidden gap-1 rounded-full border border-vault-border/70 bg-vault-bg/40 p-1 sm:flex">
-            {LINKS.filter((l) => !l.adminOnly || profile?.role === "admin").map((link) => {
+            {LINKS.filter((l) => !l.adminOnly || isStaffRole(profile?.role)).map((link) => {
               const active = pathname === link.href;
               return (
                 <Link
@@ -59,7 +60,7 @@ export function Navbar() {
             <button onClick={() => setProfileOpen(true)} className="hidden text-right sm:block" aria-label="แก้ไขโปรไฟล์">
               <p className="text-sm text-vault-text">{userDisplayName}</p>
               <p className="text-xs text-vault-muted">
-                {profile.role === "admin" ? "หัวหน้าแก๊ง" : "สมาชิก"}
+                {roleLabel(profile.role)}
               </p>
             </button>
             <button onClick={() => setProfileOpen(true)} aria-label="แก้ไขโปรไฟล์"><Image src={profile.avatarUrl} alt={userDisplayName} width={36} height={36} className="rounded-full border border-vault-border transition hover:border-vault-brass" /></button>
