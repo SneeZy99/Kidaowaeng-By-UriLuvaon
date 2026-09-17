@@ -14,6 +14,12 @@ interface DiscordUser {
   discriminator?: string;
 }
 
+type OAuthFailure = "oauth_config" | "token_exchange" | "discord_profile" | "guild_check" | "firebase_setup";
+
+class OAuthError extends Error {
+  constructor(public readonly code: OAuthFailure) { super(code); }
+}
+
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
@@ -26,13 +32,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const clientId = process.env.DISCORD_CLIENT_ID!;
-  const clientSecret = process.env.DISCORD_CLIENT_SECRET!;
-  const redirectUri = process.env.DISCORD_REDIRECT_URI!;
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+  const redirectUri = process.env.DISCORD_REDIRECT_URI;
   const guildId = process.env.DISCORD_GUILD_ID;
 
   try {
-    if (!guildId) throw new Error("Missing DISCORD_GUILD_ID");
+    if (!clientId || !clientSecret || !redirectUri || !guildId) throw new OAuthError("oauth_config");
     // 1. Exchange the authorization code for an access token.
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
@@ -46,14 +52,14 @@ export async function GET(req: NextRequest) {
       }),
     });
 
-    if (!tokenRes.ok) throw new Error("Discord token exchange failed");
+    if (!tokenRes.ok) throw new OAuthError("token_exchange");
     const tokenData: DiscordTokenResponse = await tokenRes.json();
 
     // 2. Fetch the Discord profile.
     const profileRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
-    if (!profileRes.ok) throw new Error("Failed to fetch Discord profile");
+    if (!profileRes.ok) throw new OAuthError("discord_profile");
     const profile: DiscordUser = await profileRes.json();
 
     // This endpoint is only available after the user consents to the
@@ -65,7 +71,7 @@ export async function GET(req: NextRequest) {
       loginUrl.searchParams.set("error", "not_in_guild");
       return NextResponse.redirect(loginUrl);
     }
-    if (!guildMemberRes.ok) throw new Error("Failed to verify Discord guild membership");
+    if (!guildMemberRes.ok) throw new OAuthError("guild_check");
 
     const avatarUrl = profile.avatar
       ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=128`
@@ -122,8 +128,9 @@ export async function GET(req: NextRequest) {
     });
     return res;
   } catch (err) {
-    console.error(err);
-    loginUrl.searchParams.set("error", "oauth_failed");
+    const error = err instanceof OAuthError ? err.code : "firebase_setup";
+    console.error("Discord OAuth failed:", error, err);
+    loginUrl.searchParams.set("error", error);
     return NextResponse.redirect(loginUrl);
   }
 }

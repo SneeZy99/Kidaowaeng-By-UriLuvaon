@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
+import { verifyGuildMember } from "@/lib/verifyMember";
 import type { InventoryItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ async function getToken(req: NextRequest) {
   const header = req.headers.get("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (!token) throw new AuthError("ไม่พบ token การยืนยันตัวตน");
-  return adminAuth.verifyIdToken(token);
+  return verifyGuildMember(req);
 }
 
 export async function GET(req: NextRequest) {

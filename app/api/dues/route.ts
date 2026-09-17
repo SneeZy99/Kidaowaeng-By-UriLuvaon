@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
+import { verifyGuildMember } from "@/lib/verifyMember";
 
 export const dynamic = "force-dynamic";
 const DAY = 86_400_000;
@@ -11,7 +12,7 @@ async function getViewer(req: NextRequest) {
   const header = req.headers.get("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
   if (!token) throw new AuthError("ไม่พบ token");
-  return adminAuth.verifyIdToken(token);
+  return verifyGuildMember(req);
 }
 
 export async function GET(req: NextRequest) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue, Query } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
+import { verifyGuildMember } from "@/lib/verifyMember";
 import type { Transaction } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "ไม่พบ token การยืนยันตัวตน" }, { status: 401 });
     }
 
-    const decoded = await adminAuth.verifyIdToken(token);
+    const decoded = await verifyGuildMember(req);
     const status = new URL(req.url).searchParams.get("status") ?? "all";
     if (!["all", "pending", "approved", "rejected"].includes(status)) {
       return NextResponse.json({ error: "สถานะไม่ถูกต้อง" }, { status: 400 });
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ไม่พบ token การยืนยันตัวตน" }, { status: 401 });
     }
 
-    const decoded = await adminAuth.verifyIdToken(token);
+    const decoded = await verifyGuildMember(req);
     const body = await req.json();
     const { kind, targetType, targetKey, targetLabel, amount, note } = body;
 

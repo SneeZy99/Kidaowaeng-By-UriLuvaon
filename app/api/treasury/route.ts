@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
+import { verifyGuildMember } from "@/lib/verifyMember";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "ไม่พบ token การยืนยันตัวตน" }, { status: 401 });
     }
 
-    await adminAuth.verifyIdToken(token);
+    await verifyGuildMember(req);
     const snapshot = await adminDb.collection("treasury").doc("main").get();
     const data = snapshot.data() ?? {};
 

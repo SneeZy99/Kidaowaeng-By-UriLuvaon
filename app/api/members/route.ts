@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
   try {
     const header = req.headers.get("authorization") ?? "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-    const isMember = token ? await adminAuth.verifyIdToken(token).then(() => true).catch(() => false) : false;
+    const isMember = token
+      ? await adminAuth.verifyIdToken(token).then((user) => user.guildMember === true).catch(() => false)
+      : false;
     const snapshot = await adminDb.collection("users").get();
     const members = snapshot.docs
       .map((member) => {

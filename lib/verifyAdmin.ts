@@ -19,6 +19,10 @@ export async function verifyAdmin(req: NextRequest) {
     throw new AuthError("Token ไม่ถูกต้องหรือหมดอายุ");
   });
 
+  if (decoded.guildMember !== true) {
+    throw new AuthError("Discord guild membership is required", 403);
+  }
+
   const userSnap = await adminDb.collection("users").doc(decoded.uid).get();
   const role = userSnap.exists ? userSnap.data()?.role : undefined;
 

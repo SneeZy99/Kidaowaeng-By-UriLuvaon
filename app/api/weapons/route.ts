@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
+import { verifyGuildMember } from "@/lib/verifyMember";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ async function getUser(req: NextRequest) {
   const header = req.headers.get("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (!token) throw new Error("ไม่พบ token การยืนยันตัวตน");
-  const decoded = await adminAuth.verifyIdToken(token);
+  const decoded = await verifyGuildMember(req);
   const userSnap = await adminDb.collection("users").doc(decoded.uid).get();
   const user = userSnap.data() ?? {};
   return { uid: decoded.uid, username: user.username ?? decoded.username ?? "สมาชิกแก๊ง", avatarUrl: user.avatarUrl ?? decoded.avatarUrl ?? "" };

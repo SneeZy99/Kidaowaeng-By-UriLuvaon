@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
+import { verifyGuildMember } from "@/lib/verifyMember";
 
 export async function PATCH(req: NextRequest) {
   try {
     const header = req.headers.get("authorization") ?? "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : "";
     if (!token) return NextResponse.json({ error: "ไม่พบ token" }, { status: 401 });
-    const user = await adminAuth.verifyIdToken(token);
+    const user = await verifyGuildMember(req);
     const body = await req.json();
     const icName = typeof body.icName === "string" ? body.icName.trim().replace(/\s+/g, " ") : "";
     const facebookUrl = typeof body.facebookUrl === "string" ? body.facebookUrl.trim() : "";
