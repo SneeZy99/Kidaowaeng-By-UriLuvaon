@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -10,6 +10,14 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const { firebaseUser, loading } = useAuth();
@@ -45,7 +53,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <a
+          
             href="/api/auth/discord"
             className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#4a55d6] focus-visible:outline-2"
           >

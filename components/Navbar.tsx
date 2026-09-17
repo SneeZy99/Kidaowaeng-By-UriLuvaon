@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { displayName } from "@/lib/types";
 
 const LINKS = [
   { href: "/dashboard", label: "ภาพรวมคลัง" },
+  { href: "/members", label: "สมาชิก" },
   { href: "/admin", label: "อนุมัติรายการ", adminOnly: true },
 ];
 
@@ -52,14 +54,14 @@ export function Navbar() {
         {profile && (
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
-              <p className="text-sm text-vault-text">{profile.username}</p>
+              <p className="text-sm text-vault-text">{displayName(profile)}</p>
               <p className="text-xs text-vault-muted">
                 {profile.role === "admin" ? "หัวหน้าแก๊ง" : "สมาชิก"}
               </p>
             </div>
             <Image
               src={profile.avatarUrl}
-              alt={profile.username}
+              alt={displayName(profile)}
               width={36}
               height={36}
               className="rounded-full border border-vault-border"

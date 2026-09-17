@@ -3,6 +3,8 @@ import { FieldValue, Query } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
 
+export const dynamic = "force-dynamic";
+
 const MONEY_KEYS = new Set(["cash", "redMoney"]);
 const KINDS = new Set(["deposit", "withdraw"]);
 const TARGET_TYPES = new Set(["money", "item"]);

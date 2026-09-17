@@ -3,6 +3,8 @@ import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { verifyAdmin, AuthError } from "@/lib/verifyAdmin";
 import type { InventoryItem } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 const CATEGORIES = new Set(["drug", "equipment"]);
 
 function validImageUrl(value: unknown) {

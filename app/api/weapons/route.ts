@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 
+export const dynamic = "force-dynamic";
+
 function validImageUrl(value: unknown) {
   if (value === "") return true;
   if (typeof value !== "string") return false;
