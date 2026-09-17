@@ -6,17 +6,17 @@ const config: Config = {
     extend: {
       colors: {
         vault: {
-          bg: "#14171B",
-          surface: "#1C2025",
-          surface2: "#242A31",
-          border: "#2E353D",
-          text: "#E9E6DD",
-          muted: "#8C939C",
-          brass: "#C39A5D",
-          brassDim: "#8F7444",
-          green: "#7A9873",
-          red: "#B5654B",
-          amber: "#D8A657",
+          bg: "#09070F",
+          surface: "#141020",
+          surface2: "#211633",
+          border: "#3A2852",
+          text: "#F7EEFF",
+          muted: "#AA9BB9",
+          brass: "#F29BFF",
+          brassDim: "#A96BC4",
+          green: "#7EE7C1",
+          red: "#FF729F",
+          amber: "#FFD0F7",
         },
       },
       fontFamily: {
@@ -25,7 +25,7 @@ const config: Config = {
         mono: ["var(--font-jbmono)", "monospace"],
       },
       boxShadow: {
-        panel: "0 1px 0 0 rgba(255,255,255,0.03) inset, 0 8px 24px -12px rgba(0,0,0,0.6)",
+        panel: "0 1px 0 0 rgba(255,255,255,0.07) inset, 0 14px 34px -18px rgba(0,0,0,0.9), 0 0 30px -16px rgba(242,155,255,0.75)",
       },
     },
   },

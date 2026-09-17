@@ -21,6 +21,15 @@ export interface AppUser {
   avatarUrl: string;
   role: "member" | "admin";
   createdAt: number;
+  /** In-character first + last name, e.g. "John Doe" — required before using the site. */
+  icName?: string;
+  /** Set by an admin to revoke access; the account is also disabled in Firebase Auth. */
+  disabled?: boolean;
+}
+
+/** The display name used everywhere in the UI: IC name once set, Discord name until then. */
+export function displayName(user: Pick<AppUser, "icName" | "username">): string {
+  return user.icName?.trim() || user.username;
 }
 
 export interface Treasury {

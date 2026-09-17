@@ -1,9 +1,10 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type {
-  AppUser,
-  TransactionKind,
-  TransactionTargetType,
+import {
+  displayName,
+  type AppUser,
+  type TransactionKind,
+  type TransactionTargetType,
 } from "@/lib/types";
 
 /**
@@ -32,7 +33,7 @@ export async function requestTransaction(params: {
     note: note ?? "",
     status: "pending",
     requestedBy: user.uid,
-    requestedByName: user.username,
+    requestedByName: displayName(user),
     requestedByAvatar: user.avatarUrl ?? "",
     createdAt: serverTimestamp(),
   });

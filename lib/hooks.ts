@@ -10,7 +10,13 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { InventoryItem, Transaction, Treasury, TransactionStatus } from "@/lib/types";
+import type {
+  AppUser,
+  InventoryItem,
+  Transaction,
+  Treasury,
+  TransactionStatus,
+} from "@/lib/types";
 
 export function useTreasury() {
   const [treasury, setTreasury] = useState<Treasury | null>(null);
@@ -46,6 +52,22 @@ export function useInventory() {
   }, []);
 
   return { items, loading };
+}
+
+export function useUsers() {
+  const [users, setUsers] = useState<AppUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, "users"), orderBy("createdAt", "asc"));
+    const unsub = onSnapshot(q, (snap) => {
+      setUsers(snap.docs.map((d) => d.data() as AppUser));
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  return { users, loading };
 }
 
 export function useTransactions(status?: TransactionStatus, take = 50) {
